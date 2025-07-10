@@ -1,0 +1,5 @@
+welcome = "🎲 Game created by {user}. Players can now /join."
+already_exists = "A game already exists."
+language_selected = "Your language is set to English."
+choose_language = "Please choose your preferred language:"
+no_game = "No game in progress."

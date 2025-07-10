@@ -1,0 +1,5 @@
+welcome = "🎲 遊戲由 {user} 建立。玩家現在可以輸入 /join 加入遊戲。"
+already_exists = "已經有一個遊戲在進行中。"
+language_selected = "你的語言已設定為繁體中文。"
+choose_language = "請選擇你偏好的語言："
+no_game = "目前沒有進行中的遊戲。"
