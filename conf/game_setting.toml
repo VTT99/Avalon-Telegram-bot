@@ -1,4 +1,4 @@
 min_players = 5
 max_players = 10
-languages = ["en", "zh-TW"]
+languages = ["en"]
 default_language = "en"
