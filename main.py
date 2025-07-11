@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from telegram.ext import PicklePersistence
-from commands.game_admin import new_game, start_game, kick
-from commands.pre_game_actions import join, leave
+from commands.game_admin import new_game, start_game
+from commands.pre_game_actions import join, leave, kick
 from commands.language import language, set_language_callback
 
 def main():

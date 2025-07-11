@@ -6,6 +6,7 @@ class AvalonGame:
         self.status = "pre_game_lobby"
         self.min_players = config["min_players"]
         self.max_players = config["max_players"]
+        self.lobby_message_id = None
 
     def add_player(self, user_id, name):
         if self.status != "pre_game_lobby":
