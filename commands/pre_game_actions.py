@@ -1,15 +1,23 @@
 # commands/pre_game_actions.py
 
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from commands.game_admin import get_game
 from game.game_controller import Controller
 from utils.message_helper import format_player_list
-from utils.language import get_message
+from utils.language import get_message, get_button_text
 
 
 def _msg(controller, key, **kwargs):
     return get_message(key, lang=controller.language, **kwargs)
+
+
+def build_join_keyboard(controller: Controller) -> InlineKeyboardMarkup:
+    """Build an inline keyboard with a Join Game button."""
+    btn_text = get_button_text("join_game", lang=controller.language)
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton(btn_text, callback_data=f"join|{controller.group_id}")
+    ]])
 
 
 async def reply_to_lobby(context, controller: Controller, text: str):
@@ -28,10 +36,40 @@ async def update_lobby_message(context: ContextTypes.DEFAULT_TYPE, controller: C
             await context.bot.edit_message_text(
                 chat_id=controller.group_id,
                 message_id=controller.lobby_message_id,
-                text=f"{_msg(controller, 'welcome', user=creator.user.first_name)}\n\n{format_player_list(controller)}"
+                text=f"{_msg(controller, 'welcome', user=creator.user.first_name)}\n\n{format_player_list(controller)}",
+                reply_markup=build_join_keyboard(controller)
             )
         except Exception as e:
             print(e)
+
+
+async def remove_lobby_join_button(context: ContextTypes.DEFAULT_TYPE, controller: Controller):
+    """Remove the Join button from the lobby message (e.g. when game starts or lobby closes)."""
+    if controller.lobby_message_id:
+        try:
+            await context.bot.edit_message_reply_markup(
+                chat_id=controller.group_id,
+                message_id=controller.lobby_message_id,
+                reply_markup=None
+            )
+        except Exception:
+            pass
+
+
+async def _try_dm_player(context: ContextTypes.DEFAULT_TYPE, controller: Controller, user_id: int, user_name: str):
+    """Try to send a DM to the player. If it fails, notify the group."""
+    try:
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=_msg(controller, "join_dm_welcome")
+        )
+    except Exception:
+        bot_info = await context.bot.get_me()
+        await context.bot.send_message(
+            chat_id=controller.group_id,
+            text=_msg(controller, "dm_start_bot", name=user_name, bot_username=bot_info.username),
+            parse_mode="Markdown"
+        )
 
 
 async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -47,8 +85,31 @@ async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if success:
         await reply_to_lobby(context, controller, _msg(controller, key, name=user.first_name))
         await update_lobby_message(context, controller)
+        await _try_dm_player(context, controller, user.id, user.first_name)
     else:
         await update.message.reply_text(_msg(controller, key))
+
+
+async def handle_join_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the Join Game inline button press."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+
+    controller = get_game(context, group_id)
+    if not controller or controller.status != "pre_game_lobby":
+        await query.answer()
+        return
+
+    user = query.from_user
+    success, key = controller.add_player(user.id, user.first_name)
+    if success:
+        await reply_to_lobby(context, controller, _msg(controller, key, name=user.first_name))
+        await update_lobby_message(context, controller)
+        await query.answer()
+        await _try_dm_player(context, controller, user.id, user.first_name)
+    else:
+        await query.answer(_msg(controller, key))
 
 
 async def leave(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -84,7 +145,6 @@ async def kick(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Show inline buttons with player list (exclude GM)
-    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     buttons = []
     for uid, name in controller.players.items():
         if uid != controller.master_id:

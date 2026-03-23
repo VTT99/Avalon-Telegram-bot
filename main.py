@@ -13,7 +13,7 @@ from commands.game_admin import (
     new_game, start_game, start_custom, handle_variant_callback,
     handle_custom_role_action, handle_confirm_start, handle_cancel_start,
 )
-from commands.pre_game_actions import join, leave, kick, handle_kick_callback
+from commands.pre_game_actions import join, leave, kick, handle_kick_callback, handle_join_callback
 from commands.language import language, set_language_callback
 from commands.game_playflow import (
     handle_team_toggle,
@@ -104,6 +104,7 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_kick_callback, pattern=r"^kick\|"))
     app.add_handler(CallbackQueryHandler(handle_confirm_start, pattern=r"^confirmstart\|"))
     app.add_handler(CallbackQueryHandler(handle_cancel_start, pattern=r"^cancelstart\|"))
+    app.add_handler(CallbackQueryHandler(handle_join_callback, pattern=r"^join\|"))
 
     # Config callbacks
     app.add_handler(CallbackQueryHandler(handle_config_stage, pattern=r"^cfg\|"))

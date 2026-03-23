@@ -21,6 +21,16 @@ def _msg(controller, key, **kwargs):
     return get_message(key, lang=controller.language, **kwargs)
 
 
+def _build_join_kb(controller):
+    from commands.pre_game_actions import build_join_keyboard
+    return build_join_keyboard(controller)
+
+
+async def _remove_join_btn(context, controller):
+    from commands.pre_game_actions import remove_lobby_join_button
+    await remove_lobby_join_button(context, controller)
+
+
 async def new_game(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
     user = update.effective_user
@@ -37,7 +47,8 @@ async def new_game(update: Update, context: ContextTypes.DEFAULT_TYPE):
     set_game(context, chat.id, controller)
 
     message = await update.message.reply_text(
-        f"{_msg(controller, 'welcome', user=user.first_name)}\n\n{format_player_list(controller)}"
+        f"{_msg(controller, 'welcome', user=user.first_name)}\n\n{format_player_list(controller)}",
+        reply_markup=_build_join_kb(controller)
     )
     controller.lobby_message_id = message.message_id
 
@@ -375,6 +386,7 @@ async def _do_start(context, controller, group_id, variant_index):
 
 async def _do_start_now(context, controller, group_id, variant_index):
     cancel_timeout(context, group_id)
+    await _remove_join_btn(context, controller)
     success, error_key = controller.start_game(variant_index)
     if success:
         await context.bot.send_message(
@@ -398,6 +410,7 @@ async def _do_start_custom(context, controller, group_id):
 
 async def _do_start_custom_now(context, controller, group_id):
     cancel_timeout(context, group_id)
+    await _remove_join_btn(context, controller)
     success, error_key = controller.start_game_custom(controller.custom_roles)
     if success:
         await context.bot.send_message(
