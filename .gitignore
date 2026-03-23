@@ -194,6 +194,9 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# Bot data
+data/bot_data.pkl
+
 # Claude Code
 CLAUDE.md
 
