@@ -1,4 +1,10 @@
 import os
+import sys
+
+# Must set debug env var before any game imports
+if "--debug" in sys.argv:
+    os.environ["AVALON_DEBUG"] = "1"
+
 from dotenv import load_dotenv
 from telegram import BotCommand, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
@@ -90,4 +96,6 @@ def main():
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
+    if os.environ.get("AVALON_DEBUG") == "1":
+        print("⚠️  Debug mode enabled (2-4 player configs available)")
     main()
