@@ -1165,13 +1165,13 @@ async def handle_assassin_guess(update: Update, context: ContextTypes.DEFAULT_TY
 async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/history — show mission results so far."""
     controller = _get_controller_from_update(update, context)
-    if not controller:
+    if not controller or not controller.state:
         await update.message.reply_text(get_message("no_game", context))
         return
 
     state = controller.state
-    if not state or not state.mission_history:
-        await update.message.reply_text(get_message("no_missions_yet", context))
+    if not state.mission_history:
+        await update.message.reply_text(get_message("no_missions_yet", lang=controller.language))
         return
 
     tracker = build_mission_tracker(state)
@@ -1188,12 +1188,12 @@ async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def vote_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/votehistory — show all team proposals and vote details."""
     controller = _get_controller_from_update(update, context)
-    if not controller:
+    if not controller or not controller.state:
         await update.message.reply_text(get_message("no_game", context))
         return
 
     if not controller.vote_history:
-        await update.message.reply_text(get_message("no_votes_yet", context))
+        await update.message.reply_text(get_message("no_votes_yet", lang=controller.language))
         return
 
     lang = controller.language if controller else None
