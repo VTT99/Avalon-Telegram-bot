@@ -2,6 +2,8 @@
 welcome = "🎲 Game created by {user}. Players can now /join."
 already_exists = "A game already exists."
 no_game = "No game in progress."
+no_players_yet = "No players have joined yet."
+current_players = "👥 Current Players:"
 no_game_join = "No game. Ask someone to /newgame."
 use_in_group = "Use this command in a group."
 use_in_lobby = "Use this command in a game lobby before starting."

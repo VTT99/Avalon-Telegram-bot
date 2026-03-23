@@ -2,6 +2,8 @@
 welcome = "🎲 遊戲由 {user} 建立。玩家現在可以輸入 /join 加入遊戲。"
 already_exists = "已經有一個遊戲在進行中。"
 no_game = "目前沒有進行中的遊戲。"
+no_players_yet = "目前還沒有玩家加入。"
+current_players = "👥 目前玩家："
 no_game_join = "目前沒有遊戲。請輸入 /newgame 建立新遊戲。"
 use_in_group = "請在群組中使用此指令。"
 use_in_lobby = "請在遊戲大廳（開始遊戲前）使用此指令。"
