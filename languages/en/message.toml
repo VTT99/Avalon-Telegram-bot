@@ -91,7 +91,7 @@ percival_sees = "Merlin or Morgana (you don't know which): {targets}"
 evil_sees = "Fellow evil players: {evil_players}"
 dm_failed = "Could not DM {name}. Please start a private chat with the bot first."
 dm_start_bot = "⚠️ {name}, please [start a private chat with me](https://t.me/{bot_username}) first so I can send you game messages!"
-join_dm_welcome = "🎲 You've joined the game! I'll send you your role when the game starts."
+join_dm_welcome = "🎲 You've joined the game in {group_name}! I'll send you your role when the game starts."
 
 # Variant selection
 choose_variant = "Choose a role variant or customize:"
