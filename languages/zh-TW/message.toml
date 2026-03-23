@@ -175,6 +175,7 @@ turn_notification = "👑 **輪到你了！** 為任務 {mission} 選擇 {size} 
 # 討論階段
 discussion_start = "💬 **討論時間！** 你們有 {minutes} 分鐘討論下一個任務。"
 discussion_end = "💬 **討論結束。** 進入下一個任務。"
+discussion_skip_button = "⏭️ 跳過討論（主持人）"
 config_stage_discussion = "討論"
 
 # 王者之劍

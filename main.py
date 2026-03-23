@@ -28,6 +28,7 @@ from commands.game_playflow import (
     handle_config_done,
     config,
     handle_excalibur,
+    handle_skip_discussion,
     roles_command,
     stats_command,
     my_role,
@@ -107,6 +108,7 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_mode_done, pattern=r"^modedone\|"))
     app.add_handler(CallbackQueryHandler(handle_investigate, pattern=r"^investigate\|"))
     app.add_handler(CallbackQueryHandler(handle_excalibur, pattern=r"^excalibur\|"))
+    app.add_handler(CallbackQueryHandler(handle_skip_discussion, pattern=r"^skipdiscuss\|"))
 
     # Game flow callbacks
     app.add_handler(CallbackQueryHandler(handle_team_toggle, pattern=r"^team_-?\d+_\d+$"))

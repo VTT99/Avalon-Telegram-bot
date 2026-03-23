@@ -175,6 +175,7 @@ turn_notification = "👑 **It's your turn!** Select {size} players for Mission 
 # Discussion phase
 discussion_start = "💬 **Discussion time!** You have {minutes} minute(s) to discuss before the next mission."
 discussion_end = "💬 **Discussion over.** Moving to the next mission."
+discussion_skip_button = "⏭️ Skip Discussion (GM)"
 config_stage_discussion = "Discussion"
 
 # Excalibur

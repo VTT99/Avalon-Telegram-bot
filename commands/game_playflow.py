@@ -536,14 +536,53 @@ async def _advance_to_next_mission(context, controller):
     discussion_mins = controller.timeouts.get("discussion", 0)
     if discussion_mins > 0:
         controller.status = "discussion"
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton(
+                get_message("discussion_skip_button", lang=controller.language),
+                callback_data=f"skipdiscuss|{controller.group_id}"
+            )
+        ]])
         await context.bot.send_message(
             chat_id=controller.group_id,
             text=msg("discussion_start", controller, minutes=discussion_mins),
+            reply_markup=keyboard,
             parse_mode="Markdown"
         )
         schedule_timeout_for_stage(context, controller, "discussion", timeout_discussion)
     else:
         await _do_advance(context, controller)
+
+
+async def handle_skip_discussion(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """GM skips the discussion phase early."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+
+    from commands.game_admin import get_game
+    controller = get_game(context, group_id)
+    if not controller or controller.status != "discussion":
+        await query.answer()
+        return
+
+    if not controller.is_game_master(query.from_user.id):
+        await query.answer(get_message("gm_only"))
+        return
+
+    cancel_timeout(context, group_id)
+
+    try:
+        await query.edit_message_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+    await query.answer()
+
+    await context.bot.send_message(
+        chat_id=group_id,
+        text=msg("discussion_end", controller),
+        parse_mode="Markdown"
+    )
+    await _do_advance(context, controller)
 
 
 async def timeout_discussion(context):
