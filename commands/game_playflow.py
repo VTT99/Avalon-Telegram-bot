@@ -1175,7 +1175,7 @@ async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     tracker = build_mission_tracker(state)
-    lines = [f"**Mission History** | {tracker}"]
+    lines = [f"{get_message('mission_history_header', lang=controller.language)} | {tracker}"]
     for m in state.mission_history:
         result = "✅" if m["result"] == "success" else "❌"
         team = ", ".join(controller.players.get(uid, "?") for uid in m["team"])
@@ -1196,11 +1196,12 @@ async def vote_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(get_message("no_votes_yet", context))
         return
 
-    lines = ["**Detailed Vote History:**"]
+    lang = controller.language if controller else None
+    lines = [get_message("vote_history_header", lang=lang)]
     for i, entry in enumerate(controller.vote_history, 1):
         leader = controller.players.get(entry["leader"], "?")
         team = ", ".join(controller.players.get(uid, "?") for uid in entry["team"])
-        status = "✅ Approved" if entry["approved"] else "❌ Rejected"
+        status = get_message("vote_approved", lang=lang) if entry["approved"] else get_message("vote_rejected", lang=lang)
         lines.append(f"\n**#{i}** (Mission {entry['mission']}) | {status}")
         lines.append(f"  Leader: {leader} | Team: {team}")
         for uid, vote in entry["votes"].items():
@@ -1243,7 +1244,7 @@ async def abort_game(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cancel_timeout(context, controller.group_id)
     await context.bot.send_message(
         chat_id=chat.id,
-        text="🛑 **Game aborted by the game master.**",
+        text=msg("game_aborted", controller),
         parse_mode="Markdown"
     )
     if controller.state:

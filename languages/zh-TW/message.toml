@@ -32,6 +32,11 @@ no_active_phase = "目前沒有進行中的階段。"
 not_on_team = "你不在這次任務隊伍中。"
 assassin_only = "只有刺客可以猜測。"
 lady_holder_only = "只有湖中女神持有者可以調查。"
+game_aborted = "🛑 **遊戲已被遊戲主持人中止。**"
+mission_history_header = "**任務歷史**"
+vote_history_header = "**詳細投票歷史：**"
+vote_approved = "✅ 通過"
+vote_rejected = "❌ 否決"
 
 # 語言
 language_selected = "你的語言已設定為繁體中文。"

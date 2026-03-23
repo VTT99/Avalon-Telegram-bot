@@ -32,6 +32,11 @@ no_active_phase = "No active phase."
 not_on_team = "You're not on this mission team."
 assassin_only = "Only the Assassin can guess."
 lady_holder_only = "Only the Lady holder can investigate."
+game_aborted = "🛑 **Game aborted by the game master.**"
+mission_history_header = "**Mission History**"
+vote_history_header = "**Detailed Vote History:**"
+vote_approved = "✅ Approved"
+vote_rejected = "❌ Rejected"
 
 # Language
 language_selected = "Your language is set to English."
