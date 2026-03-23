@@ -103,14 +103,15 @@ async def speed(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(get_message("gm_only", context))
         return
 
+    lang = controller.language
     keyboard = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("⚡ Fast (2min)", callback_data=f"speed_{chat.id}_fast"),
-            InlineKeyboardButton("⏱️ Medium (5min)", callback_data=f"speed_{chat.id}_medium"),
+            InlineKeyboardButton(get_message("speed_fast", lang=lang), callback_data=f"speed_{chat.id}_fast"),
+            InlineKeyboardButton(get_message("speed_medium", lang=lang), callback_data=f"speed_{chat.id}_medium"),
         ],
         [
-            InlineKeyboardButton("🐢 Slow (30min)", callback_data=f"speed_{chat.id}_slow"),
-            InlineKeyboardButton("♾️ No Limit", callback_data=f"speed_{chat.id}_none"),
+            InlineKeyboardButton(get_message("speed_slow", lang=lang), callback_data=f"speed_{chat.id}_slow"),
+            InlineKeyboardButton(get_message("speed_none", lang=lang), callback_data=f"speed_{chat.id}_none"),
         ]
     ])
     await update.message.reply_text(
@@ -135,7 +136,7 @@ async def handle_speed_callback(update: Update, context: ContextTypes.DEFAULT_TY
         return
 
     controller.timeout_minutes = SPEED_PRESETS[preset]
-    label = {"fast": "⚡ Fast (2min)", "medium": "⏱️ Medium (5min)", "slow": "🐢 Slow (30min)", "none": "♾️ No Limit"}[preset]
+    label = get_message(f"speed_{preset}", lang=controller.language)
     try:
         await query.edit_message_text(msg("speed_set", controller, speed=label))
     except Exception:
