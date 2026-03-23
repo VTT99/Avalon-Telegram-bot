@@ -2,6 +2,35 @@
 welcome = "🎲 遊戲由 {user} 建立。玩家現在可以輸入 /join 加入遊戲。"
 already_exists = "已經有一個遊戲在進行中。"
 no_game = "目前沒有進行中的遊戲。"
+no_game_join = "目前沒有遊戲。請輸入 /newgame 建立新遊戲。"
+use_in_group = "請在群組中使用此指令。"
+use_in_lobby = "請在遊戲大廳（開始遊戲前）使用此指令。"
+gm_only = "只有遊戲主持人可以執行此操作。"
+welcome_dm = "歡迎使用阿瓦隆機器人！在群組中輸入 /join 加入遊戲。"
+myrole_dm_only = "請在與機器人的私人對話中使用 /myrole。"
+not_in_game = "你目前不在任何進行中的遊戲。"
+no_missions_yet = "尚未完成任何任務。"
+no_votes_yet = "尚未進行任何隊伍投票。"
+
+# 玩家操作
+game_already_started = "遊戲已經開始。"
+already_joined = "你已經加入了。"
+player_limit_reached = "已達人數上限。請遊戲主持人輸入 /startgame 開始遊戲。"
+player_joined = "{name} 加入了遊戲！"
+cant_leave_started = "遊戲開始後無法離開。"
+player_left = "{name} 離開了遊戲。"
+kick_usage = "回覆要踢出的玩家的訊息，或使用 /kick 玩家名稱。"
+
+# 遊戲開始
+need_more_players = "至少需要 {count} 位玩家。"
+game_started = "🎮 遊戲開始！"
+start_failed = "無法開始遊戲。"
+
+# 回調彈出訊息
+no_active_phase = "目前沒有進行中的階段。"
+not_on_team = "你不在這次任務隊伍中。"
+assassin_only = "只有刺客可以猜測。"
+lady_holder_only = "只有湖中女神持有者可以調查。"
 
 # 語言
 language_selected = "你的語言已設定為繁體中文。"

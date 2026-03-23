@@ -34,21 +34,21 @@ class Controller:
 
     def add_player(self, user_id, name):
         if self.status != "pre_game_lobby":
-            return False, "Game already started."
+            return False, "game_already_started"
         if user_id in self.players:
-            return False, "You already joined."
+            return False, "already_joined"
         if len(self.players) >= self.max_players:
-            return False, "Player limit reached. Ask the game master to /startgame."
+            return False, "player_limit_reached"
         self.players[user_id] = name
-        return True, f"{name} joined the game."
+        return True, "player_joined"
 
     def remove_player(self, user_id):
         if self.status != "pre_game_lobby":
-            return False, "Can't leave after game started."
+            return False, "cant_leave_started"
         if user_id not in self.players:
-            return False, "You're not in the game."
+            return False, "not_in_game"
         name = self.players.pop(user_id)
-        return True, f"{name} left the game."
+        return True, "player_left"
 
     def is_game_master(self, user_id):
         return user_id == self.master_id

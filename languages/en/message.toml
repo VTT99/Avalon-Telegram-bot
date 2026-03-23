@@ -2,6 +2,35 @@
 welcome = "🎲 Game created by {user}. Players can now /join."
 already_exists = "A game already exists."
 no_game = "No game in progress."
+no_game_join = "No game. Ask someone to /newgame."
+use_in_group = "Use this command in a group."
+use_in_lobby = "Use this command in a game lobby before starting."
+gm_only = "Only the game master can do this."
+welcome_dm = "Welcome to Avalon Bot! Join a game in a group chat with /join."
+myrole_dm_only = "Use /myrole in a private chat with the bot."
+not_in_game = "You're not in any active game."
+no_missions_yet = "No missions completed yet."
+no_votes_yet = "No team votes yet."
+
+# Player actions
+game_already_started = "Game already started."
+already_joined = "You already joined."
+player_limit_reached = "Player limit reached. Ask the game master to /startgame."
+player_joined = "{name} joined the game!"
+cant_leave_started = "Can't leave after game started."
+player_left = "{name} left the game."
+kick_usage = "Reply to a player's message, or use /kick PlayerName."
+
+# Game start
+need_more_players = "Need at least {count} players."
+game_started = "🎮 Game started!"
+start_failed = "Failed to start game."
+
+# Callback popup messages
+no_active_phase = "No active phase."
+not_on_team = "You're not on this mission team."
+assassin_only = "Only the Assassin can guess."
+lady_holder_only = "Only the Lady holder can investigate."
 
 # Language
 language_selected = "Your language is set to English."

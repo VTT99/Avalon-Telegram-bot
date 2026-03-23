@@ -96,11 +96,11 @@ async def speed(update: Update, context: ContextTypes.DEFAULT_TYPE):
     controller = get_game(context, chat.id)
 
     if not controller or controller.status != "pre_game_lobby":
-        await update.message.reply_text("Use /speed in a game lobby before starting.")
+        await update.message.reply_text(get_message("use_in_lobby", context))
         return
 
     if not controller.is_game_master(update.effective_user.id):
-        await update.message.reply_text("Only the game master can set speed.")
+        await update.message.reply_text(get_message("gm_only", context))
         return
 
     keyboard = InlineKeyboardMarkup([
@@ -128,10 +128,10 @@ async def handle_speed_callback(update: Update, context: ContextTypes.DEFAULT_TY
     from commands.game_admin import get_game
     controller = get_game(context, group_id)
     if not controller or controller.status != "pre_game_lobby":
-        await query.answer("Game already started.")
+        await query.answer(get_message("game_already_started"))
         return
     if not controller.is_game_master(query.from_user.id):
-        await query.answer("Only the game master can set speed.")
+        await query.answer(get_message("gm_only"))
         return
 
     controller.timeout_minutes = SPEED_PRESETS[preset]
@@ -152,10 +152,10 @@ async def mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
     controller = get_game(context, chat.id)
 
     if not controller or controller.status != "pre_game_lobby":
-        await update.message.reply_text("Use /mode in a game lobby before starting.")
+        await update.message.reply_text(get_message("use_in_lobby", context))
         return
     if not controller.is_game_master(update.effective_user.id):
-        await update.message.reply_text("Only the game master can set modes.")
+        await update.message.reply_text(get_message("gm_only", context))
         return
 
     keyboard = _build_mode_keyboard(controller)
@@ -193,10 +193,10 @@ async def handle_mode_callback(update: Update, context: ContextTypes.DEFAULT_TYP
     from commands.game_admin import get_game
     controller = get_game(context, group_id)
     if not controller or controller.status != "pre_game_lobby":
-        await query.answer("Game already started.")
+        await query.answer(get_message("game_already_started"))
         return
     if not controller.is_game_master(query.from_user.id):
-        await query.answer("Only the game master can set modes.")
+        await query.answer(get_message("gm_only"))
         return
 
     enabled = controller.toggle_mode(mode_name)
@@ -322,12 +322,12 @@ async def handle_investigate(update: Update, context: ContextTypes.DEFAULT_TYPE)
     from commands.game_admin import get_game
     controller = get_game(context, group_id)
     if not controller or controller.status != "investigate":
-        await query.answer("No active investigation.")
+        await query.answer(get_message("no_active_phase"))
         return
 
     holder_id = controller.state.mode_data.get("lady_holder")
     if query.from_user.id != holder_id:
-        await query.answer("Only the Lady holder can investigate.")
+        await query.answer(get_message("lady_holder_only"))
         return
 
     cancel_timeout(context, group_id)
@@ -511,12 +511,12 @@ async def dm_assign_roles(context: ContextTypes.DEFAULT_TYPE, controller):
 async def my_role(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/myrole — player requests their role info (DM only)."""
     if update.effective_chat.type != "private":
-        await update.message.reply_text("Use /myrole in a private chat with the bot.")
+        await update.message.reply_text(get_message("myrole_dm_only", context))
         return
     user_id = update.effective_user.id
     controller = find_game_for_player(context, user_id)
     if not controller:
-        await update.message.reply_text("You're not in any active game.")
+        await update.message.reply_text(get_message("not_in_game", context))
         return
     await update.message.reply_text(
         build_role_message(controller, user_id), parse_mode="Markdown"
@@ -533,7 +533,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     else:
         await update.message.reply_text(
-            "Welcome to Avalon Bot! Join a game in a group chat with /join."
+            get_message("welcome_dm", context)
         )
 
 
@@ -672,7 +672,7 @@ async def handle_team_toggle(update: Update, context: ContextTypes.DEFAULT_TYPE)
     controller, group_id = get_game_from_callback(context, query.data, "team")
 
     if not controller or controller.status != "team_select":
-        await query.answer("No active team selection.")
+        await query.answer(get_message("no_active_phase"))
         return
 
     if query.from_user.id != controller.state.get_current_leader():
@@ -696,7 +696,7 @@ async def handle_team_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE
     controller, group_id = get_game_from_callback(context, query.data, "teamconfirm")
 
     if not controller or controller.status != "team_select":
-        await query.answer("No active team selection.")
+        await query.answer(get_message("no_active_phase"))
         return
 
     if query.from_user.id != controller.state.get_current_leader():
@@ -763,12 +763,12 @@ async def handle_team_vote(update: Update, context: ContextTypes.DEFAULT_TYPE):
     controller, group_id = get_game_from_callback(context, query.data, "teamvote")
 
     if not controller or controller.status != "team_vote":
-        await query.answer("No active team vote.")
+        await query.answer(get_message("no_active_phase"))
         return
 
     user_id = query.from_user.id
     if user_id not in controller.players:
-        await query.answer("You're not in this game.")
+        await query.answer(get_message("not_in_game"))
         return
     if user_id in controller.team_votes:
         await query.answer(msg("already_voted", controller))
@@ -934,12 +934,12 @@ async def handle_mission_vote(update: Update, context: ContextTypes.DEFAULT_TYPE
     controller, group_id = get_game_from_callback(context, query.data, "missionvote")
 
     if not controller or controller.status != "mission_vote":
-        await query.answer("No active mission vote.")
+        await query.answer(get_message("no_active_phase"))
         return
 
     user_id = query.from_user.id
     if user_id not in controller.selected_team:
-        await query.answer("You're not on this mission team.")
+        await query.answer(get_message("not_on_team"))
         return
     if user_id in controller.mission_votes:
         await query.answer(msg("already_voted", controller))
@@ -1123,11 +1123,11 @@ async def handle_assassin_guess(update: Update, context: ContextTypes.DEFAULT_TY
     controller, group_id = get_game_from_callback(context, query.data, "assassin")
 
     if not controller or controller.status != "assassin_guess":
-        await query.answer("No active assassin guess.")
+        await query.answer(get_message("no_active_phase"))
         return
 
     if query.from_user.id != controller.state.get_assassin():
-        await query.answer("Only the Assassin can guess.")
+        await query.answer(get_message("assassin_only"))
         return
 
     cancel_timeout(context, group_id)
@@ -1166,12 +1166,12 @@ async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/history — show mission results so far."""
     controller = _get_controller_from_update(update, context)
     if not controller:
-        await update.message.reply_text("No active game.")
+        await update.message.reply_text(get_message("no_game", context))
         return
 
     state = controller.state
     if not state or not state.mission_history:
-        await update.message.reply_text("No missions completed yet.")
+        await update.message.reply_text(get_message("no_missions_yet", context))
         return
 
     tracker = build_mission_tracker(state)
@@ -1189,11 +1189,11 @@ async def vote_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/votehistory — show all team proposals and vote details."""
     controller = _get_controller_from_update(update, context)
     if not controller:
-        await update.message.reply_text("No active game.")
+        await update.message.reply_text(get_message("no_game", context))
         return
 
     if not controller.vote_history:
-        await update.message.reply_text("No team votes yet.")
+        await update.message.reply_text(get_message("no_votes_yet", context))
         return
 
     lines = ["**Detailed Vote History:**"]
@@ -1227,17 +1227,17 @@ async def abort_game(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/abort — game master ends the game immediately."""
     chat = update.effective_chat
     if chat.type not in ("group", "supergroup"):
-        await update.message.reply_text("Use this command in a group.")
+        await update.message.reply_text(get_message("use_in_group", context))
         return
 
     from commands.game_admin import get_game
     controller = get_game(context, chat.id)
     if not controller:
-        await update.message.reply_text("No active game.")
+        await update.message.reply_text(get_message("no_game", context))
         return
 
     if not controller.is_game_master(update.effective_user.id):
-        await update.message.reply_text("Only the game master can abort the game.")
+        await update.message.reply_text(get_message("gm_only", context))
         return
 
     cancel_timeout(context, controller.group_id)
