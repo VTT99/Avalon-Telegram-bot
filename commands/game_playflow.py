@@ -38,24 +38,53 @@ def _timeout_job_name(group_id):
     return f"timeout_{group_id}"
 
 
+def _reminder_job_name(group_id):
+    return f"reminder_{group_id}"
+
+
+async def _timeout_reminder(context):
+    """Send a 30s warning before auto-action."""
+    group_id = context.job.data
+    controller = context.bot_data.get(f"game_{group_id}")
+    if not controller or controller.status in ("pre_game_lobby", "game_over"):
+        return
+    await context.bot.send_message(
+        chat_id=group_id,
+        text=msg("timeout_reminder", controller),
+        parse_mode="Markdown"
+    )
+
+
 def schedule_timeout(context, controller, seconds, callback):
-    """Schedule a timeout job, cancelling any existing one first. No-op if timeout is 0."""
+    """Schedule a timeout job + 30s reminder. No-op if timeout is 0."""
     cancel_timeout(context, controller.group_id)
     if controller.timeout_minutes <= 0:
         return
+
+    group_id = controller.group_id
+
+    # Schedule reminder 30s before timeout (only if timeout > 30s)
+    if seconds > 30:
+        context.job_queue.run_once(
+            _timeout_reminder,
+            when=seconds - 30,
+            data=group_id,
+            name=_reminder_job_name(group_id),
+        )
+
     context.job_queue.run_once(
         callback,
         when=seconds,
-        data=controller.group_id,
-        name=_timeout_job_name(controller.group_id),
+        data=group_id,
+        name=_timeout_job_name(group_id),
     )
 
 
 def cancel_timeout(context, group_id):
-    """Cancel any pending timeout for this game."""
-    jobs = context.job_queue.get_jobs_by_name(_timeout_job_name(group_id))
-    for job in jobs:
-        job.schedule_removal()
+    """Cancel any pending timeout and reminder for this game."""
+    for name in (_timeout_job_name(group_id), _reminder_job_name(group_id)):
+        for job in context.job_queue.get_jobs_by_name(name):
+            job.schedule_removal()
 
 
 # --- Speed command ---

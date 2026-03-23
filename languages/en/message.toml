@@ -12,6 +12,7 @@ language_gm_only = "Only the game master can change the language."
 # Speed
 choose_speed = "Choose game speed (auto-action timeout per phase):"
 speed_set = "Game speed set to {speed}"
+timeout_reminder = "⏰ **30 seconds left!** Act now or it will be done automatically."
 timeout_auto_action = "⏰ **Time's up!** Auto-acting for inactive players..."
 
 # Game modes

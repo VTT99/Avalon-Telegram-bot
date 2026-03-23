@@ -12,6 +12,7 @@ language_gm_only = "只有遊戲主持人可以更改語言。"
 # 速度
 choose_speed = "選擇遊戲速度（每階段自動操作超時時間）："
 speed_set = "遊戲速度已設定為 {speed}"
+timeout_reminder = "⏰ **剩餘30秒！** 請立即操作，否則將自動執行。"
 timeout_auto_action = "⏰ **時間到！** 正在為未操作的玩家自動執行..."
 
 # 遊戲模式
