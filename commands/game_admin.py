@@ -70,30 +70,68 @@ async def start_game(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ {error_key}")
         return
 
-    from game.roles import get_role_display_name
-    lang = controller.language
-    buttons = []
-    for i, v in enumerate(variants):
-        roles = v["roles"]
-        role_counts = {}
-        for r in roles:
-            role_counts[r] = role_counts.get(r, 0) + 1
-        label = ", ".join(
-            f"{count}x{get_role_display_name(name, lang)}" if count > 1 else get_role_display_name(name, lang)
-            for name, count in role_counts.items()
+    if len(variants) == 1:
+        # Only one variant — start directly
+        await _do_start(context, controller, chat.id, 0)
+    else:
+        # Multiple variants — let GM choose
+        from game.roles import get_role_display_name
+        lang = controller.language
+        buttons = []
+        for i, v in enumerate(variants):
+            roles = v["roles"]
+            role_counts = {}
+            for r in roles:
+                role_counts[r] = role_counts.get(r, 0) + 1
+            label = ", ".join(
+                f"{count}x{get_role_display_name(name, lang)}" if count > 1 else get_role_display_name(name, lang)
+                for name, count in role_counts.items()
+            )
+            buttons.append([InlineKeyboardButton(
+                label, callback_data=f"variant_{chat.id}_{i}"
+            )])
+        keyboard = InlineKeyboardMarkup(buttons)
+        await update.message.reply_text(
+            _msg(controller, "choose_variant"), reply_markup=keyboard
         )
-        buttons.append([InlineKeyboardButton(
-            label, callback_data=f"variant_{chat.id}_{i}"
-        )])
-    # Add custom role option
-    buttons.append([InlineKeyboardButton(
-        _msg(controller, "custom_roles_button"),
-        callback_data=f"customroles_{chat.id}"
-    )])
-    keyboard = InlineKeyboardMarkup(buttons)
-    await update.message.reply_text(
-        _msg(controller, "choose_variant"), reply_markup=keyboard
-    )
+
+
+async def start_custom(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/startcustom — GM picks custom role composition via DM."""
+    chat = update.effective_chat
+    user = update.effective_user
+    controller = get_game(context, chat.id)
+
+    if not controller:
+        await update.message.reply_text(get_message("no_game", context))
+        return
+    if not controller.is_game_master(user.id):
+        await update.message.reply_text(_msg(controller, "gm_only"))
+        return
+    if not controller.can_start():
+        await update.message.reply_text(
+            _msg(controller, "need_more_players", count=controller.min_players)
+        )
+        return
+
+    # Initialize custom role selection and DM the GM
+    controller.custom_roles = []
+    player_count = len(controller.players)
+
+    await update.message.reply_text(_msg(controller, "custom_roles_dm_notice"))
+
+    keyboard = _build_custom_roles_keyboard(controller)
+    try:
+        await context.bot.send_message(
+            chat_id=controller.master_id,
+            text=_msg(controller, "custom_roles_header", current=0, total=player_count),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception:
+        await update.message.reply_text(
+            _msg(controller, "dm_failed", name="Game Master")
+        )
 
 
 async def handle_variant_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -118,50 +156,6 @@ async def handle_variant_callback(update: Update, context: ContextTypes.DEFAULT_
 
     await _do_start(context, controller, group_id, variant_index)
 
-
-async def handle_custom_roles(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """GM chose custom roles — DM them a role picker."""
-    query = update.callback_query
-    parts = query.data.split("_")
-    group_id = int(parts[1])
-
-    controller = get_game(context, group_id)
-    if not controller or controller.status != "pre_game_lobby":
-        await query.answer()
-        return
-    if not controller.is_game_master(query.from_user.id):
-        await query.answer(_msg(controller, "gm_only"))
-        return
-
-    try:
-        await query.edit_message_reply_markup(reply_markup=None)
-    except Exception:
-        pass
-    await query.answer()
-
-    # Initialize custom role selection on controller
-    controller.custom_roles = []
-    player_count = len(controller.players)
-
-    await context.bot.send_message(
-        chat_id=group_id,
-        text=_msg(controller, "custom_roles_dm_notice")
-    )
-
-    # DM the GM with role picker
-    keyboard = _build_custom_roles_keyboard(controller)
-    try:
-        await context.bot.send_message(
-            chat_id=controller.master_id,
-            text=_msg(controller, "custom_roles_header", current=0, total=player_count),
-            reply_markup=keyboard,
-            parse_mode="Markdown"
-        )
-    except Exception:
-        await context.bot.send_message(
-            chat_id=group_id,
-            text=_msg(controller, "dm_failed", name="Game Master")
-        )
 
 
 def _build_custom_roles_keyboard(controller):
