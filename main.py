@@ -30,6 +30,7 @@ from commands.game_playflow import (
     handle_excalibur,
     handle_skip_discussion,
     roles_command,
+    handle_role_info_callback,
     stats_command,
     my_role,
     start_command,
@@ -119,6 +120,7 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_team_vote, pattern=r"^teamvote_-?\d+_(approve|reject)$"))
     app.add_handler(CallbackQueryHandler(handle_mission_vote, pattern=r"^missionvote_-?\d+_(success|fail)$"))
     app.add_handler(CallbackQueryHandler(handle_assassin_guess, pattern=r"^assassin_-?\d+_\d+$"))
+    app.add_handler(CallbackQueryHandler(handle_role_info_callback, pattern=r"^roleinfo\|"))
 
     print("Bot is running...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)

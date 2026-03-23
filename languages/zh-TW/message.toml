@@ -176,6 +176,10 @@ role_name_Lancelot_Evil = "蘭斯洛特（邪惡）"
 
 # 角色說明
 roles_list_header = "**所有角色：**"
+roles_guide_header = "**角色指南** — 點擊角色查看說明。"
+roles_guide_dm_sent = "📖 角色指南已傳送至您的私訊！"
+roles_guide_dm_failed = "❌ 無法傳送私訊給您。請先啟動機器人：@{bot_username}"
+roles_guide_detail = "{emoji} **{name}** [{side}]\n\n{desc}"
 role_desc_Merlin = "知道邪惡玩家（莫德雷德除外）"
 role_desc_Percival = "看到梅林和莫甘娜（不知道誰是誰）"
 role_desc_LoyalServant = "亞瑟的忠實僕人"
