@@ -166,11 +166,12 @@ async def mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def _build_mode_keyboard(controller):
     from game.game_modes import get_available_modes, MODE_METADATA
+    lang = controller.language
     buttons = []
     for mode_name in get_available_modes():
         meta = MODE_METADATA.get(mode_name, {})
         emoji = meta.get("emoji", "")
-        display = meta.get("display_name", mode_name)
+        display = get_message(f"mode_name_{mode_name}", lang=lang)
         enabled = mode_name in controller.enabled_modes
         prefix = "✅ " if enabled else "❌ "
         buttons.append([InlineKeyboardButton(
@@ -222,8 +223,7 @@ async def handle_mode_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if controller.enabled_modes:
-        from game.game_modes import MODE_METADATA
-        names = [MODE_METADATA.get(m, {}).get("display_name", m) for m in controller.enabled_modes]
+        names = [get_message(f"mode_name_{m}", lang=controller.language) for m in controller.enabled_modes]
         text = msg("active_modes", controller, modes=", ".join(names))
     else:
         text = msg("no_modes", controller)

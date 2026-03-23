@@ -54,6 +54,8 @@ timeout_auto_action = "⏰ **Time's up!** Auto-acting for inactive players..."
 choose_mode = "Toggle game modes:"
 active_modes = "Active modes: {modes}"
 no_modes = "No special modes active."
+mode_name_lady_of_the_lake = "Lady of the Lake"
+mode_name_lancelot = "Lancelot"
 
 # Role assignment
 roles_in_game = "**Roles in this game:** {roles}"

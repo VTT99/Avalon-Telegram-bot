@@ -54,6 +54,8 @@ timeout_auto_action = "⏰ **時間到！** 正在為未操作的玩家自動執
 choose_mode = "切換遊戲模式："
 active_modes = "已啟用模式：{modes}"
 no_modes = "未啟用任何特殊模式。"
+mode_name_lady_of_the_lake = "湖中女神"
+mode_name_lancelot = "蘭斯洛特"
 
 # 角色分配
 roles_in_game = "**本局角色：** {roles}"
