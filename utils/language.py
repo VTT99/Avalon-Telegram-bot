@@ -19,15 +19,27 @@ def load_toml(lang: str, file: str) -> dict:
     fallback = os.path.join(LANG_PATH, DEFAULT_LANG, f"{file}.toml")
     return toml.load(fallback) if os.path.exists(fallback) else {}
 
+def _resolve_lang(context) -> str:
+    """Resolve language: group chat_data > user_data > default."""
+    if context:
+        # Prefer group-level language (set by GM, persists across games)
+        if hasattr(context, "chat_data") and context.chat_data and "lang" in context.chat_data:
+            return context.chat_data["lang"]
+        # Fall back to user's personal language
+        if hasattr(context, "user_data") and context.user_data:
+            return context.user_data.get("lang", DEFAULT_LANG)
+    return DEFAULT_LANG
+
+
 def get_message(key: str, context=None, lang: str = None, **kwargs) -> str:
     if lang is None:
-        lang = get_user_language(context.user_data) if context else DEFAULT_LANG
+        lang = _resolve_lang(context)
     messages = load_toml(lang, "message")
     msg = messages.get(key) or load_toml(DEFAULT_LANG, "message").get(key, f"[{key}]")
     return msg.format(**kwargs)
 
 def get_button_text(key: str, context=None, lang: str = None) -> str:
     if lang is None:
-        lang = get_user_language(context.user_data) if context else DEFAULT_LANG
+        lang = _resolve_lang(context)
     buttons = load_toml(lang, "button")
     return buttons.get(key) or load_toml(DEFAULT_LANG, "button").get(key, f"[{key}]")
