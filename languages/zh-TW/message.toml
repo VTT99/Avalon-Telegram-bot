@@ -1,5 +1,5 @@
 # 大廳
-welcome = "🎲 遊戲由 {user} 建立。玩家現在可以輸入 /join 加入遊戲。"
+welcome = "🎲 遊戲由 {user} 建立。請按下方按鈕加入遊戲！"
 already_exists = "已經有一個遊戲在進行中。"
 no_game = "目前沒有進行中的遊戲。"
 no_players_yet = "目前還沒有玩家加入。"
@@ -58,7 +58,7 @@ timeout_auto_action = "⏰ **時間到！** 正在為未操作的玩家自動執
 timeout_extended = "⏰ {name} 延長了2分鐘。"
 extend_button = "⏰ +2分鐘"
 extend_already_used = "本階段已延長過超時時間。"
-lobby_closing = "⏰ **大廳將在 {seconds} 秒後關閉！** 請立即 /startgame 或 /join。"
+lobby_closing = "⏰ **大廳將在 {seconds} 秒後關閉！** 請立即加入或 /startgame！"
 lobby_auto_start = "⏰ **大廳關閉 — 自動開始遊戲！**"
 lobby_expired = "⏰ **遊戲大廳已過期。** 人數不足。輸入 /newgame 開始新遊戲。"
 
@@ -90,6 +90,8 @@ merlin_sees = "你能看到的邪惡玩家：{evil_players}"
 percival_sees = "梅林或莫甘娜（你不知道誰是誰）：{targets}"
 evil_sees = "你的邪惡夥伴：{evil_players}"
 dm_failed = "無法私訊 {name}。請先與機器人開啟私人對話。"
+dm_start_bot = "⚠️ {name}，請先[與我開始私人對話](https://t.me/{bot_username})，這樣我才能發送遊戲訊息給你！"
+join_dm_welcome = "🎲 你已加入遊戲！遊戲開始時我會發送你的角色資訊。"
 
 # 角色選擇
 choose_variant = "選擇角色配置或自訂："

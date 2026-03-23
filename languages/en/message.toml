@@ -1,5 +1,5 @@
 # Lobby
-welcome = "🎲 Game created by {user}. Players can now /join."
+welcome = "🎲 Game created by {user}. Press the button below to join!"
 already_exists = "A game already exists."
 no_game = "No game in progress."
 no_players_yet = "No players have joined yet."
@@ -58,7 +58,7 @@ timeout_auto_action = "⏰ **Time's up!** Auto-acting for inactive players..."
 timeout_extended = "⏰ {name} extended the timeout by 2 minutes."
 extend_button = "⏰ +2 min"
 extend_already_used = "Timeout already extended this phase."
-lobby_closing = "⏰ **Lobby closing in {seconds} seconds!** Use /startgame or /join now."
+lobby_closing = "⏰ **Lobby closing in {seconds} seconds!** Join now or /startgame!"
 lobby_auto_start = "⏰ **Lobby closed — auto-starting the game!**"
 lobby_expired = "⏰ **Game lobby expired.** Not enough players. Start a new game with /newgame."
 
@@ -90,6 +90,8 @@ merlin_sees = "Evil players visible to you: {evil_players}"
 percival_sees = "Merlin or Morgana (you don't know which): {targets}"
 evil_sees = "Fellow evil players: {evil_players}"
 dm_failed = "Could not DM {name}. Please start a private chat with the bot first."
+dm_start_bot = "⚠️ {name}, please [start a private chat with me](https://t.me/{bot_username}) first so I can send you game messages!"
+join_dm_welcome = "🎲 You've joined the game! I'll send you your role when the game starts."
 
 # Variant selection
 choose_variant = "Choose a role variant or customize:"
