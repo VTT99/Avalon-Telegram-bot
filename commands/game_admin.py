@@ -6,7 +6,7 @@ from game.game_controller import Controller
 from conf import game_setting
 from utils.message_helper import format_player_list
 from utils.language import get_message
-from commands.game_playflow import begin_playflow
+from commands.game_playflow import begin_playflow, schedule_lobby_timeout, cancel_timeout
 
 
 def get_game(context, group_id):
@@ -40,6 +40,9 @@ async def new_game(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"{_msg(controller, 'welcome', user=user.first_name)}\n\n{format_player_list(controller)}"
     )
     controller.lobby_message_id = message.message_id
+
+    # Schedule lobby expiry
+    await schedule_lobby_timeout(context, controller)
 
 
 async def start_game(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -113,6 +116,7 @@ async def handle_variant_callback(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def _do_start(context, controller, group_id, variant_index):
+    cancel_timeout(context, group_id)  # cancel lobby timeout
     success, error_key = controller.start_game(variant_index)
     if success:
         await context.bot.send_message(

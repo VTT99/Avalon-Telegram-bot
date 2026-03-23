@@ -14,7 +14,18 @@ class Controller:
         self.max_players = config["max_players"]
         self.lobby_message_id = None
         self.state = None
-        self.timeout_minutes = 30  # default slow (30 min)
+
+        # Per-stage timeouts (minutes, 0 = no limit)
+        self.timeouts: dict[str, int] = {
+            "lobby": 60,
+            "team_select": 30,
+            "team_vote": 30,
+            "mission_vote": 30,
+            "assassin_guess": 30,
+            "investigate": 30,
+        }
+        self.allow_extend = False
+        self.extend_used = False  # reset each phase
 
         # Language: prefer group-persisted, fall back to config default
         default_lang = config.get("default_language", "en")

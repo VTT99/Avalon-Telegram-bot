@@ -55,6 +55,23 @@ speed_none = "♾️ No Limit"
 speed_set = "Game speed set to {speed}"
 timeout_reminder = "⏰ **30 seconds left!** Act now or it will be done automatically."
 timeout_auto_action = "⏰ **Time's up!** Auto-acting for inactive players..."
+timeout_extended = "⏰ {name} extended the timeout by 2 minutes."
+extend_button = "⏰ +2 min"
+extend_already_used = "Timeout already extended this phase."
+lobby_expired = "⏰ **Game lobby expired.** Start a new game with /newgame."
+
+# Config
+config_header = "**Game Configuration** — tap a stage to set its timeout:"
+config_done = "Done"
+config_saved = "Configuration saved."
+config_no_limit = "No Limit"
+config_allow_extend = "Allow players to extend timeout"
+config_stage_lobby = "Lobby"
+config_stage_team_select = "Team Selection"
+config_stage_team_vote = "Team Vote"
+config_stage_mission_vote = "Mission Vote"
+config_stage_assassin = "Assassin Guess"
+config_stage_investigate = "Investigation"
 
 # Game modes
 choose_mode = "Toggle game modes:"

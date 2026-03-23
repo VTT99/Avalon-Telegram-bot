@@ -7,11 +7,13 @@ from game.roles import is_evil as is_evil_role, get_vision, evil_role_names
 from utils.language import get_message, get_button_text
 
 SPEED_PRESETS = {
-    "fast": 2,
-    "medium": 5,
-    "slow": 30,     # 30 minutes
-    "none": 0,     # no timeout
+    "fast": {"lobby": 10, "team_select": 2, "team_vote": 2, "mission_vote": 2, "assassin_guess": 2, "investigate": 2},
+    "medium": {"lobby": 30, "team_select": 5, "team_vote": 5, "mission_vote": 5, "assassin_guess": 5, "investigate": 5},
+    "slow": {"lobby": 60, "team_select": 30, "team_vote": 30, "mission_vote": 30, "assassin_guess": 30, "investigate": 30},
+    "none": {"lobby": 0, "team_select": 0, "team_vote": 0, "mission_vote": 0, "assassin_guess": 0, "investigate": 0},
 }
+
+STAGE_KEYS = ["lobby", "team_select", "team_vote", "mission_vote", "assassin_guess", "investigate"]
 
 
 def get_game_from_callback(context, callback_data, prefix):
@@ -48,19 +50,36 @@ async def _timeout_reminder(context):
     controller = context.bot_data.get(f"game_{group_id}")
     if not controller or controller.status in ("pre_game_lobby", "game_over"):
         return
+
+    # Include extend button if allowed
+    text = msg("timeout_reminder", controller)
+    reply_markup = None
+    if controller.allow_extend and not controller.extend_used:
+        reply_markup = InlineKeyboardMarkup([[
+            InlineKeyboardButton(
+                get_message("extend_button", lang=controller.language),
+                callback_data=f"extend|{group_id}"
+            )
+        ]])
+
     await context.bot.send_message(
         chat_id=group_id,
-        text=msg("timeout_reminder", controller),
+        text=text,
+        reply_markup=reply_markup,
         parse_mode="Markdown"
     )
 
 
-def schedule_timeout(context, controller, seconds, callback):
-    """Schedule a timeout job + 30s reminder. No-op if timeout is 0."""
+def schedule_timeout_for_stage(context, controller, stage: str, callback):
+    """Schedule a timeout for a specific game stage. No-op if timeout is 0."""
     cancel_timeout(context, controller.group_id)
-    if controller.timeout_minutes <= 0:
+    controller.extend_used = False  # reset extend for new phase
+
+    minutes = controller.timeouts.get(stage, 0)
+    if minutes <= 0:
         return
 
+    seconds = minutes * 60
     group_id = controller.group_id
 
     # Schedule reminder 30s before timeout (only if timeout > 30s)
@@ -78,6 +97,56 @@ def schedule_timeout(context, controller, seconds, callback):
         data=group_id,
         name=_timeout_job_name(group_id),
     )
+
+
+async def handle_extend(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Player extends the current timeout by 2 minutes."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+
+    from commands.game_admin import get_game
+    controller = get_game(context, group_id)
+    if not controller or not controller.allow_extend:
+        await query.answer()
+        return
+
+    if controller.extend_used:
+        await query.answer(get_message("extend_already_used", lang=controller.language))
+        return
+
+    controller.extend_used = True
+
+    # Cancel current timeout and reminder, reschedule with +2 min
+    jobs = context.job_queue.get_jobs_by_name(_timeout_job_name(group_id))
+    if jobs:
+        job = jobs[0]
+        remaining = (job.next_t - job.next_t.now(job.next_t.tzinfo)).total_seconds()
+        new_seconds = max(remaining, 0) + 120  # add 2 minutes
+
+        # Get the callback from the existing job
+        callback = job.callback
+        cancel_timeout(context, group_id)
+
+        context.job_queue.run_once(
+            callback,
+            when=new_seconds,
+            data=group_id,
+            name=_timeout_job_name(group_id),
+        )
+
+    try:
+        await query.edit_message_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+
+    player_name = controller.players.get(query.from_user.id, query.from_user.first_name)
+    await context.bot.send_message(
+        chat_id=group_id,
+        text=get_message("timeout_extended", lang=controller.language, name=player_name),
+        parse_mode="Markdown"
+    )
+    await query.answer()
 
 
 def cancel_timeout(context, group_id):
@@ -135,7 +204,7 @@ async def handle_speed_callback(update: Update, context: ContextTypes.DEFAULT_TY
         await query.answer(get_message("gm_only"))
         return
 
-    controller.timeout_minutes = SPEED_PRESETS[preset]
+    controller.timeouts.update(SPEED_PRESETS[preset])
     label = get_message(f"speed_{preset}", lang=controller.language)
     try:
         await query.edit_message_text(msg("speed_set", controller, speed=label))
@@ -287,9 +356,7 @@ async def send_investigate(context, controller, group_id):
         await _advance_to_next_mission(context, controller)
 
     # Schedule timeout
-    schedule_timeout(context, controller,
-                     controller.timeout_minutes * 60,
-                     timeout_investigate)
+    schedule_timeout_for_stage(context, controller, "investigate", timeout_investigate)
 
 
 async def timeout_investigate(context):
@@ -434,6 +501,204 @@ async def _advance_to_next_mission(context, controller):
     controller.reset_round()
     controller.status = "team_select"
     await send_team_selection(context, controller)
+
+
+# --- Config command (GM DM) ---
+
+STAGE_LABELS = {
+    "lobby": "config_stage_lobby",
+    "team_select": "config_stage_team_select",
+    "team_vote": "config_stage_team_vote",
+    "mission_vote": "config_stage_mission_vote",
+    "assassin_guess": "config_stage_assassin",
+    "investigate": "config_stage_investigate",
+}
+
+TIMEOUT_OPTIONS = [1, 2, 5, 10, 30, 60, 0]  # 0 = no limit
+
+
+async def config(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/config — GM configures per-stage timeouts via DM."""
+    from commands.game_admin import get_game
+    chat = update.effective_chat
+    user = update.effective_user
+
+    # Find the game this GM owns
+    controller = None
+    if chat.type in ("group", "supergroup"):
+        controller = get_game(context, chat.id)
+    else:
+        # DM — find their game
+        for key, c in context.bot_data.items():
+            if key.startswith("game_") and hasattr(c, "master_id") and c.master_id == user.id:
+                if c.status == "pre_game_lobby":
+                    controller = c
+                    break
+
+    if not controller:
+        await update.message.reply_text(get_message("no_game", context))
+        return
+    if not controller.is_game_master(user.id):
+        await update.message.reply_text(get_message("gm_only", context))
+        return
+
+    keyboard = _build_config_keyboard(controller)
+    await update.message.reply_text(
+        get_message("config_header", lang=controller.language),
+        reply_markup=keyboard,
+        parse_mode="Markdown"
+    )
+
+
+def _build_config_keyboard(controller):
+    lang = controller.language
+    buttons = []
+    for stage in STAGE_KEYS:
+        label = get_message(STAGE_LABELS[stage], lang=lang)
+        mins = controller.timeouts.get(stage, 0)
+        value = get_message("config_no_limit", lang=lang) if mins == 0 else f"{mins}min"
+        buttons.append([InlineKeyboardButton(
+            f"{label}: {value}",
+            callback_data=f"cfg|{controller.group_id}|{stage}"
+        )])
+    # Extend toggle
+    extend_status = "✅" if controller.allow_extend else "❌"
+    buttons.append([InlineKeyboardButton(
+        f"{extend_status} {get_message('config_allow_extend', lang=lang)}",
+        callback_data=f"cfgext|{controller.group_id}"
+    )])
+    buttons.append([InlineKeyboardButton(
+        get_message("config_done", lang=lang),
+        callback_data=f"cfgdone|{controller.group_id}"
+    )])
+    return InlineKeyboardMarkup(buttons)
+
+
+async def handle_config_stage(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """GM taps a stage to set its timeout."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+    stage = parts[2]
+
+    from commands.game_admin import get_game
+    controller = get_game(context, group_id)
+    if not controller or not controller.is_game_master(query.from_user.id):
+        await query.answer()
+        return
+
+    lang = controller.language
+    label = get_message(STAGE_LABELS[stage], lang=lang)
+    buttons = []
+    for mins in TIMEOUT_OPTIONS:
+        if mins == 0:
+            text = get_message("config_no_limit", lang=lang)
+        else:
+            text = f"{mins}min"
+        buttons.append(InlineKeyboardButton(
+            text, callback_data=f"cfgset|{group_id}|{stage}|{mins}"
+        ))
+    keyboard = InlineKeyboardMarkup([buttons[:4], buttons[4:]])
+    try:
+        await query.edit_message_text(
+            f"{label}:",
+            reply_markup=keyboard
+        )
+    except Exception:
+        pass
+    await query.answer()
+
+
+async def handle_config_set(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """GM sets a specific timeout value for a stage."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+    stage = parts[2]
+    mins = int(parts[3])
+
+    from commands.game_admin import get_game
+    controller = get_game(context, group_id)
+    if not controller or not controller.is_game_master(query.from_user.id):
+        await query.answer()
+        return
+
+    controller.timeouts[stage] = mins
+
+    # Return to main config view
+    keyboard = _build_config_keyboard(controller)
+    try:
+        await query.edit_message_text(
+            get_message("config_header", lang=controller.language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception:
+        pass
+    await query.answer()
+
+
+async def handle_config_extend(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Toggle allow_extend."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+
+    from commands.game_admin import get_game
+    controller = get_game(context, group_id)
+    if not controller or not controller.is_game_master(query.from_user.id):
+        await query.answer()
+        return
+
+    controller.allow_extend = not controller.allow_extend
+    keyboard = _build_config_keyboard(controller)
+    try:
+        await query.edit_message_text(
+            get_message("config_header", lang=controller.language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception:
+        pass
+    await query.answer()
+
+
+async def handle_config_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Close config menu."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+
+    from commands.game_admin import get_game
+    controller = get_game(context, group_id)
+    try:
+        await query.edit_message_text(get_message("config_saved", lang=controller.language if controller else None))
+    except Exception:
+        pass
+    await query.answer()
+
+
+# --- Lobby timeout ---
+
+async def schedule_lobby_timeout(context, controller):
+    """Schedule lobby expiry."""
+    schedule_timeout_for_stage(context, controller, "lobby", timeout_lobby)
+
+
+async def timeout_lobby(context):
+    """Auto-expire the game lobby."""
+    group_id = context.job.data
+    controller = context.bot_data.get(f"game_{group_id}")
+    if not controller or controller.status != "pre_game_lobby":
+        return
+
+    await context.bot.send_message(
+        chat_id=group_id,
+        text=get_message("lobby_expired", lang=controller.language),
+        parse_mode="Markdown"
+    )
+    controller.status = "game_over"
+    context.bot_data.pop(f"game_{group_id}", None)
 
 
 # --- Entry point ---
@@ -596,9 +861,7 @@ async def send_team_selection(context: ContextTypes.DEFAULT_TYPE, controller):
     controller.team_message_id = m.message_id
 
     # Schedule timeout for team selection
-    schedule_timeout(context, controller,
-                     controller.timeout_minutes * 60,
-                     timeout_team_select)
+    schedule_timeout_for_stage(context, controller, "team_select", timeout_team_select)
 
 
 async def timeout_team_select(context: ContextTypes.DEFAULT_TYPE):
@@ -662,9 +925,7 @@ async def timeout_team_select(context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass
 
-    schedule_timeout(context, controller,
-                     controller.timeout_minutes * 60,
-                     timeout_team_vote)
+    schedule_timeout_for_stage(context, controller, "team_vote", timeout_team_vote)
 
 
 async def handle_team_toggle(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -749,9 +1010,7 @@ async def handle_team_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE
             print(f"Failed to DM {name} for team vote: {e}")
 
     # Schedule timeout for team vote
-    schedule_timeout(context, controller,
-                     controller.timeout_minutes * 60,
-                     timeout_team_vote)
+    schedule_timeout_for_stage(context, controller, "team_vote", timeout_team_vote)
 
     await query.answer()
 
@@ -900,9 +1159,7 @@ async def send_mission_vote(context, controller, group_id):
             print(f"Failed to DM {name} for mission vote: {e}")
 
     # Schedule timeout for mission vote
-    schedule_timeout(context, controller,
-                     controller.timeout_minutes * 60,
-                     timeout_mission_vote)
+    schedule_timeout_for_stage(context, controller, "mission_vote", timeout_mission_vote)
 
 
 async def timeout_mission_vote(context: ContextTypes.DEFAULT_TYPE):
@@ -1081,9 +1338,7 @@ async def send_assassin_guess(context, controller, group_id):
         return
 
     # Schedule timeout for assassin guess
-    schedule_timeout(context, controller,
-                     controller.timeout_minutes * 60,
-                     timeout_assassin_guess)
+    schedule_timeout_for_stage(context, controller, "assassin_guess", timeout_assassin_guess)
 
 
 async def timeout_assassin_guess(context: ContextTypes.DEFAULT_TYPE):

@@ -55,6 +55,23 @@ speed_none = "♾️ 無限制"
 speed_set = "遊戲速度已設定為 {speed}"
 timeout_reminder = "⏰ **剩餘30秒！** 請立即操作，否則將自動執行。"
 timeout_auto_action = "⏰ **時間到！** 正在為未操作的玩家自動執行..."
+timeout_extended = "⏰ {name} 延長了2分鐘。"
+extend_button = "⏰ +2分鐘"
+extend_already_used = "本階段已延長過超時時間。"
+lobby_expired = "⏰ **遊戲大廳已過期。** 輸入 /newgame 開始新遊戲。"
+
+# 設定
+config_header = "**遊戲設定** — 點選階段以設定超時時間："
+config_done = "完成"
+config_saved = "設定已儲存。"
+config_no_limit = "無限制"
+config_allow_extend = "允許玩家延長超時時間"
+config_stage_lobby = "大廳"
+config_stage_team_select = "隊伍選擇"
+config_stage_team_vote = "隊伍投票"
+config_stage_mission_vote = "任務投票"
+config_stage_assassin = "刺客猜測"
+config_stage_investigate = "調查"
 
 # 遊戲模式
 choose_mode = "切換遊戲模式："

@@ -21,6 +21,12 @@ from commands.game_playflow import (
     handle_investigate,
     handle_mode_callback,
     handle_mode_done,
+    handle_extend,
+    handle_config_stage,
+    handle_config_set,
+    handle_config_extend,
+    handle_config_done,
+    config,
     my_role,
     start_command,
     speed,
@@ -38,7 +44,8 @@ BOT_COMMANDS = [
     BotCommand("startgame", "Start the game (game master)"),
     BotCommand("abort", "Abort the game (game master)"),
     BotCommand("kick", "Kick a player (game master)"),
-    BotCommand("speed", "Set game speed / timeout"),
+    BotCommand("speed", "Quick speed preset"),
+    BotCommand("config", "Configure per-stage timeouts"),
     BotCommand("mode", "Toggle game modes (Lady/Lancelot)"),
     BotCommand("language", "Set language (game master)"),
     BotCommand("myrole", "Check your role (DM)"),
@@ -70,6 +77,7 @@ def main():
     app.add_handler(CommandHandler("abort", abort_game))
     app.add_handler(CommandHandler("language", language))
     app.add_handler(CommandHandler("speed", speed))
+    app.add_handler(CommandHandler("config", config))
     app.add_handler(CommandHandler("mode", mode))
     app.add_handler(CommandHandler("history", history))
     app.add_handler(CommandHandler("votehistory", vote_history))
@@ -80,7 +88,14 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_variant_callback, pattern=r"^variant_-?\d+_\d+$"))
     app.add_handler(CallbackQueryHandler(handle_kick_callback, pattern=r"^kick\|"))
 
-    # Mode callbacks (use | separator to avoid underscore conflicts in mode names)
+    # Config callbacks
+    app.add_handler(CallbackQueryHandler(handle_config_stage, pattern=r"^cfg\|"))
+    app.add_handler(CallbackQueryHandler(handle_config_set, pattern=r"^cfgset\|"))
+    app.add_handler(CallbackQueryHandler(handle_config_extend, pattern=r"^cfgext\|"))
+    app.add_handler(CallbackQueryHandler(handle_config_done, pattern=r"^cfgdone\|"))
+    app.add_handler(CallbackQueryHandler(handle_extend, pattern=r"^extend\|"))
+
+    # Mode callbacks
     app.add_handler(CallbackQueryHandler(handle_mode_callback, pattern=r"^mode\|"))
     app.add_handler(CallbackQueryHandler(handle_mode_done, pattern=r"^modedone\|"))
     app.add_handler(CallbackQueryHandler(handle_investigate, pattern=r"^investigate\|"))
