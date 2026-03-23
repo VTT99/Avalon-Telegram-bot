@@ -722,19 +722,29 @@ async def schedule_lobby_timeout(context, controller):
 
 
 async def timeout_lobby(context):
-    """Auto-expire the game lobby."""
+    """Auto-start if enough players, otherwise expire the lobby."""
     group_id = context.job.data
     controller = context.bot_data.get(f"game_{group_id}")
     if not controller or controller.status != "pre_game_lobby":
         return
 
-    await context.bot.send_message(
-        chat_id=group_id,
-        text=get_message("lobby_expired", lang=controller.language),
-        parse_mode="Markdown"
-    )
-    controller.status = "game_over"
-    context.bot_data.pop(f"game_{group_id}", None)
+    if controller.can_start():
+        # Auto-start with first available variant
+        await context.bot.send_message(
+            chat_id=group_id,
+            text=get_message("lobby_auto_start", lang=controller.language),
+            parse_mode="Markdown"
+        )
+        from commands.game_admin import _do_start
+        await _do_start(context, controller, group_id, 0)
+    else:
+        await context.bot.send_message(
+            chat_id=group_id,
+            text=get_message("lobby_expired", lang=controller.language),
+            parse_mode="Markdown"
+        )
+        controller.status = "game_over"
+        context.bot_data.pop(f"game_{group_id}", None)
 
 
 # --- Entry point ---

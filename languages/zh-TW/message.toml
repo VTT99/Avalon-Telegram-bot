@@ -59,7 +59,8 @@ timeout_extended = "⏰ {name} 延長了2分鐘。"
 extend_button = "⏰ +2分鐘"
 extend_already_used = "本階段已延長過超時時間。"
 lobby_closing = "⏰ **大廳將在 {seconds} 秒後關閉！** 請立即 /startgame 或 /join。"
-lobby_expired = "⏰ **遊戲大廳已過期。** 輸入 /newgame 開始新遊戲。"
+lobby_auto_start = "⏰ **大廳關閉 — 自動開始遊戲！**"
+lobby_expired = "⏰ **遊戲大廳已過期。** 人數不足。輸入 /newgame 開始新遊戲。"
 
 # 設定
 config_header = "**遊戲設定** — 點選階段以設定超時時間："

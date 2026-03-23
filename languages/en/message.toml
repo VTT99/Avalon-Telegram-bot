@@ -59,7 +59,8 @@ timeout_extended = "⏰ {name} extended the timeout by 2 minutes."
 extend_button = "⏰ +2 min"
 extend_already_used = "Timeout already extended this phase."
 lobby_closing = "⏰ **Lobby closing in {seconds} seconds!** Use /startgame or /join now."
-lobby_expired = "⏰ **Game lobby expired.** Start a new game with /newgame."
+lobby_auto_start = "⏰ **Lobby closed — auto-starting the game!**"
+lobby_expired = "⏰ **Game lobby expired.** Not enough players. Start a new game with /newgame."
 
 # Config
 config_header = "**Game Configuration** — tap a stage to set its timeout:"
