@@ -58,6 +58,7 @@ timeout_auto_action = "⏰ **Time's up!** Auto-acting for inactive players..."
 timeout_extended = "⏰ {name} extended the timeout by 2 minutes."
 extend_button = "⏰ +2 min"
 extend_already_used = "Timeout already extended this phase."
+lobby_closing = "⏰ **Lobby closing in {seconds} seconds!** Use /startgame or /join now."
 lobby_expired = "⏰ **Game lobby expired.** Start a new game with /newgame."
 
 # Config

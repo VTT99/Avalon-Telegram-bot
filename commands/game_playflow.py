@@ -7,9 +7,9 @@ from game.roles import is_evil as is_evil_role, get_vision, evil_role_names
 from utils.language import get_message, get_button_text
 
 SPEED_PRESETS = {
-    "fast": {"lobby": 10, "team_select": 2, "team_vote": 2, "mission_vote": 2, "assassin_guess": 2, "investigate": 2},
-    "medium": {"lobby": 30, "team_select": 5, "team_vote": 5, "mission_vote": 5, "assassin_guess": 5, "investigate": 5},
-    "slow": {"lobby": 60, "team_select": 30, "team_vote": 30, "mission_vote": 30, "assassin_guess": 30, "investigate": 30},
+    "fast": {"lobby": 2, "team_select": 2, "team_vote": 2, "mission_vote": 2, "assassin_guess": 2, "investigate": 2},
+    "medium": {"lobby": 5, "team_select": 5, "team_vote": 5, "mission_vote": 5, "assassin_guess": 5, "investigate": 5},
+    "slow": {"lobby": 10, "team_select": 30, "team_vote": 30, "mission_vote": 30, "assassin_guess": 30, "investigate": 30},
     "none": {"lobby": 0, "team_select": 0, "team_vote": 0, "mission_vote": 0, "assassin_guess": 0, "investigate": 0},
 }
 
@@ -40,12 +40,12 @@ def _timeout_job_name(group_id):
     return f"timeout_{group_id}"
 
 
-def _reminder_job_name(group_id):
-    return f"reminder_{group_id}"
+def _reminder_job_name(group_id, suffix=""):
+    return f"reminder_{group_id}{suffix}"
 
 
 async def _timeout_reminder(context):
-    """Send a 30s warning before auto-action."""
+    """Send a 30s warning before auto-action (in-game phases)."""
     group_id = context.job.data
     controller = context.bot_data.get(f"game_{group_id}")
     if not controller or controller.status in ("pre_game_lobby", "game_over"):
@@ -70,6 +70,19 @@ async def _timeout_reminder(context):
     )
 
 
+async def _lobby_reminder(context):
+    """Send a lobby closing warning."""
+    group_id, secs_left = context.job.data
+    controller = context.bot_data.get(f"game_{group_id}")
+    if not controller or controller.status != "pre_game_lobby":
+        return
+    await context.bot.send_message(
+        chat_id=group_id,
+        text=get_message("lobby_closing", lang=controller.language, seconds=secs_left),
+        parse_mode="Markdown"
+    )
+
+
 def schedule_timeout_for_stage(context, controller, stage: str, callback):
     """Schedule a timeout for a specific game stage. No-op if timeout is 0."""
     cancel_timeout(context, controller.group_id)
@@ -82,14 +95,31 @@ def schedule_timeout_for_stage(context, controller, stage: str, callback):
     seconds = minutes * 60
     group_id = controller.group_id
 
-    # Schedule reminder 30s before timeout (only if timeout > 30s)
-    if seconds > 30:
-        context.job_queue.run_once(
-            _timeout_reminder,
-            when=seconds - 30,
-            data=group_id,
-            name=_reminder_job_name(group_id),
-        )
+    if stage == "lobby":
+        # Lobby gets 60s and 30s reminders
+        if seconds > 60:
+            context.job_queue.run_once(
+                _lobby_reminder,
+                when=seconds - 60,
+                data=(group_id, 60),
+                name=_reminder_job_name(group_id, "_60"),
+            )
+        if seconds > 30:
+            context.job_queue.run_once(
+                _lobby_reminder,
+                when=seconds - 30,
+                data=(group_id, 30),
+                name=_reminder_job_name(group_id, "_30"),
+            )
+    else:
+        # In-game phases get a 30s reminder
+        if seconds > 30:
+            context.job_queue.run_once(
+                _timeout_reminder,
+                when=seconds - 30,
+                data=group_id,
+                name=_reminder_job_name(group_id),
+            )
 
     context.job_queue.run_once(
         callback,
@@ -150,8 +180,14 @@ async def handle_extend(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def cancel_timeout(context, group_id):
-    """Cancel any pending timeout and reminder for this game."""
-    for name in (_timeout_job_name(group_id), _reminder_job_name(group_id)):
+    """Cancel any pending timeout and reminders for this game."""
+    names = [
+        _timeout_job_name(group_id),
+        _reminder_job_name(group_id),
+        _reminder_job_name(group_id, "_60"),
+        _reminder_job_name(group_id, "_30"),
+    ]
+    for name in names:
         for job in context.job_queue.get_jobs_by_name(name):
             job.schedule_removal()
 
@@ -514,7 +550,7 @@ STAGE_LABELS = {
     "investigate": "config_stage_investigate",
 }
 
-TIMEOUT_OPTIONS = [1, 2, 5, 10, 30, 60, 0]  # 0 = no limit
+TIMEOUT_OPTIONS = [1, 2, 5, 10, 60, 0]  # 0 = no limit
 
 
 async def config(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -598,7 +634,7 @@ async def handle_config_stage(update: Update, context: ContextTypes.DEFAULT_TYPE
         buttons.append(InlineKeyboardButton(
             text, callback_data=f"cfgset|{group_id}|{stage}|{mins}"
         ))
-    keyboard = InlineKeyboardMarkup([buttons[:4], buttons[4:]])
+    keyboard = InlineKeyboardMarkup([buttons[:3], buttons[3:]])
     try:
         await query.edit_message_text(
             f"{label}:",

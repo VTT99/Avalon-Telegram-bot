@@ -58,6 +58,7 @@ timeout_auto_action = "⏰ **時間到！** 正在為未操作的玩家自動執
 timeout_extended = "⏰ {name} 延長了2分鐘。"
 extend_button = "⏰ +2分鐘"
 extend_already_used = "本階段已延長過超時時間。"
+lobby_closing = "⏰ **大廳將在 {seconds} 秒後關閉！** 請立即 /startgame 或 /join。"
 lobby_expired = "⏰ **遊戲大廳已過期。** 輸入 /newgame 開始新遊戲。"
 
 # 設定

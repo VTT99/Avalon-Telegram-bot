@@ -17,7 +17,7 @@ class Controller:
 
         # Per-stage timeouts (minutes, 0 = no limit)
         self.timeouts: dict[str, int] = {
-            "lobby": 60,
+            "lobby": 2,
             "team_select": 30,
             "team_vote": 30,
             "mission_vote": 30,
