@@ -3,7 +3,7 @@
 import random as _random
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from game.roles import is_evil as is_evil_role, get_vision, evil_role_names, get_role_display_name
+from game.roles import is_evil as is_evil_role, get_vision, evil_role_names, get_role_display_name, get_alignment
 from utils.language import get_message, get_button_text
 
 SPEED_PRESETS = {
@@ -860,7 +860,16 @@ def build_role_message(controller, user_id):
     lang = controller.language
     role = state.get_role(user_id)
     display_role = get_role_display_name(role, lang)
-    lines = [get_message("your_role", lang=lang, role=display_role)]
+    alignment = get_alignment(role)
+    side_emoji = "😇" if alignment == "good" else "😈"
+    side_name = get_message("side_good", lang=lang) if alignment == "good" else get_message("side_evil", lang=lang)
+
+    lines = [get_message("your_role", lang=lang, role=display_role, side_emoji=side_emoji)]
+    lines.append(get_message("your_role_side", lang=lang, side_emoji=side_emoji, side=side_name))
+
+    tip = get_message(f"role_tip_{role}", lang=lang)
+    if not tip.startswith("["):
+        lines.append(tip)
 
     vision = get_vision(role, state.player_roles, user_id)
     if vision["sees"] and vision["message_key"]:

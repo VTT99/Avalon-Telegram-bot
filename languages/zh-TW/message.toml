@@ -85,7 +85,8 @@ mode_name_lancelot = "蘭斯洛特"
 # 角色分配
 roles_in_game = "**本局角色：** {roles}"
 roles_assigned = "角色已分配！請查看你的私人訊息。"
-your_role = "你的角色：**{role}**"
+your_role = "你的角色：{side_emoji} **{role}**"
+your_role_side = "你屬於 {side_emoji} **{side}** 陣營。"
 merlin_sees = "你能看到的邪惡玩家：{evil_players}"
 percival_sees = "梅林或莫甘娜（你不知道誰是誰）：{targets}"
 evil_sees = "你的邪惡夥伴：{evil_players}"
@@ -186,6 +187,18 @@ role_desc_Oberon = "對邪惡夥伴隱藏，也看不到他們"
 role_desc_Minion = "莫德雷德的爪牙"
 role_desc_Lancelot_Good = "忠誠可能動搖的高貴騎士"
 role_desc_Lancelot_Evil = "忠誠可能動搖的墮落騎士"
+
+# 角色遊戲提示（角色分配後私訊顯示）
+role_tip_Merlin = "💡 你能看到邪惡玩家（莫德雷德除外）。引導正義陣營走向勝利——但要低調！如果刺客發現你是梅林，他們可以刺殺你贏得遊戲。"
+role_tip_Percival = "💡 你能看到梅林和莫甘娜，但不知道誰是誰。利用這些資訊保護梅林並引導隊伍。"
+role_tip_LoyalServant = "💡 你沒有特殊能力。注意討論和投票模式來判斷誰是正義、誰是邪惡。"
+role_tip_Assassin = "💡 你知道其他邪惡玩家是誰。如果正義陣營贏得3個任務，你有一次機會猜測誰是梅林——猜對了邪惡就贏了！"
+role_tip_Mordred = "💡 你知道其他邪惡玩家是誰，而且梅林看不到你。利用這個優勢在不引起懷疑的情況下破壞任務。"
+role_tip_Morgana = "💡 在派西維爾眼中你看起來像梅林，製造混亂。利用這點誤導正義陣營並保護真正的邪惡玩家。"
+role_tip_Oberon = "💡 你是邪惡陣營但對其他邪惡玩家隱藏——你也看不到他們。獨自行動破壞任務。"
+role_tip_Minion = "💡 你知道其他邪惡玩家是誰。一起合作破壞任務並保護隊友的身份。"
+role_tip_Lancelot_Good = "💡 你一開始是正義陣營，但你的忠誠可能在遊戲中切換。準備好應對陣營的變化！"
+role_tip_Lancelot_Evil = "💡 你一開始是邪惡陣營，但你的忠誠可能在遊戲中切換。準備好應對陣營的變化！"
 
 # 回合通知
 turn_notification = "👑 **輪到你了！** 為任務 {mission} 選擇 {size} 名隊員。"
