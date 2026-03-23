@@ -92,7 +92,13 @@ evil_sees = "你的邪惡夥伴：{evil_players}"
 dm_failed = "無法私訊 {name}。請先與機器人開啟私人對話。"
 
 # 角色選擇
-choose_variant = "選擇角色配置："
+choose_variant = "選擇角色配置或自訂："
+custom_roles_button = "🎭 自訂角色"
+custom_roles_dm_notice = "請查看私訊選擇自訂角色。"
+custom_roles_header = "**自訂角色** ({current}/{total})\n使用 ➕/➖ 增減角色。點擊角色名稱查看說明。"
+custom_roles_confirm = "✅ 確認並開始"
+custom_roles_full = "角色數量已滿。"
+custom_roles_count_mismatch = "角色數量與玩家數量不符。"
 
 # 隊伍選擇
 team_select_header = "📋 **任務 {mission}** | {tracker}\n👑 隊長：**{leader}**\n選擇 **{size}** 位玩家組成隊伍："
@@ -155,6 +161,18 @@ game_summary_roles = "**遊戲總結 - 角色：**"
 game_summary_missions = "**任務歷史：**"
 side_good = "正義"
 side_evil = "邪惡"
+
+# 角色名稱
+role_name_Merlin = "梅林"
+role_name_Percival = "派西維爾"
+role_name_LoyalServant = "忠臣"
+role_name_Assassin = "刺客"
+role_name_Mordred = "莫德雷德"
+role_name_Morgana = "莫甘娜"
+role_name_Oberon = "奧伯倫"
+role_name_Minion = "爪牙"
+role_name_Lancelot_Good = "蘭斯洛特（正義）"
+role_name_Lancelot_Evil = "蘭斯洛特（邪惡）"
 
 # 角色說明
 roles_list_header = "**所有角色：**"

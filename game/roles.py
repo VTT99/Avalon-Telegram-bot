@@ -11,6 +11,16 @@ _CONF_PATH = Path(__file__).parent.parent / "conf" / "roles.toml"
 ROLE_REGISTRY: dict[str, dict] = toml.load(str(_CONF_PATH))
 
 
+def get_role_display_name(role_name: str, lang: str = None) -> str:
+    """Get translated role name. Falls back to the internal name."""
+    from utils.language import get_message
+    translated = get_message(f"role_name_{role_name}", lang=lang)
+    # If key not found, get_message returns "[role_name_X]" — fall back to raw name
+    if translated.startswith("["):
+        return role_name
+    return translated
+
+
 def get_alignment(role_name: str) -> str:
     entry = ROLE_REGISTRY.get(role_name)
     if entry:

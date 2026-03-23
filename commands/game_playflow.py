@@ -3,7 +3,7 @@
 import random as _random
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from game.roles import is_evil as is_evil_role, get_vision, evil_role_names
+from game.roles import is_evil as is_evil_role, get_vision, evil_role_names, get_role_display_name
 from utils.language import get_message, get_button_text
 
 SPEED_PRESETS = {
@@ -516,7 +516,7 @@ async def do_loyalty_switch(context, controller, group_id):
                 try:
                     await context.bot.send_message(
                         chat_id=uid,
-                        text=msg("loyalty_switched_role", controller, role=role),
+                        text=msg("loyalty_switched_role", controller, role=get_role_display_name(role, controller.language)),
                         parse_mode="Markdown"
                     )
                 except Exception:
@@ -820,11 +820,12 @@ async def timeout_lobby(context):
 async def begin_playflow(context: ContextTypes.DEFAULT_TYPE, controller):
     """Called after start_game() succeeds. DMs roles then starts team selection."""
     # Announce which roles are in the game (official rule: players know the role list)
+    lang = controller.language
     role_counts = {}
     for r in controller.state.roles:
         role_counts[r] = role_counts.get(r, 0) + 1
     role_list = ", ".join(
-        f"{count}x {name}" if count > 1 else name
+        f"{count}x {get_role_display_name(name, lang)}" if count > 1 else get_role_display_name(name, lang)
         for name, count in role_counts.items()
     )
     await context.bot.send_message(
@@ -858,7 +859,8 @@ def build_role_message(controller, user_id):
     state = controller.state
     lang = controller.language
     role = state.get_role(user_id)
-    lines = [get_message("your_role", lang=lang, role=role)]
+    display_role = get_role_display_name(role, lang)
+    lines = [get_message("your_role", lang=lang, role=display_role)]
 
     vision = get_vision(role, state.player_roles, user_id)
     if vision["sees"] and vision["message_key"]:
@@ -1677,7 +1679,8 @@ async def roles_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         alignment = info["alignment"]
         side = "😇" if alignment == "good" else "😈"
         desc = get_message(f"role_desc_{role_name}", lang=lang)
-        lines.append(f"  {side} **{role_name}** — {desc}")
+        display = get_role_display_name(role_name, lang)
+        lines.append(f"  {side} **{display}** — {desc}")
 
     await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
@@ -1783,7 +1786,7 @@ async def game_summary(controller, context, group_id):
     for user_id, role in controller.state.player_roles.items():
         name = controller.players.get(user_id, "Unknown")
         side = get_message("side_evil", lang=lang) if is_evil_role(role) else get_message("side_good", lang=lang)
-        lines.append(f"  {name}: {role} ({side})")
+        lines.append(f"  {name}: {get_role_display_name(role, lang)} ({side})")
 
     if controller.state.mission_history:
         lines.append("\n" + get_message("game_summary_missions", lang=lang))
@@ -1822,10 +1825,10 @@ async def dm_end_results(controller, context, winner: str, reason: str):
         player_stats["games"] += 1
         if won:
             player_stats["wins"] += 1
-            text = get_message("dm_you_won", lang=lang, role=role, reason=reason_text)
+            text = get_message("dm_you_won", lang=lang, role=get_role_display_name(role, lang), reason=reason_text)
         else:
             player_stats["losses"] += 1
-            text = get_message("dm_you_lost", lang=lang, role=role, reason=reason_text)
+            text = get_message("dm_you_lost", lang=lang, role=get_role_display_name(role, lang), reason=reason_text)
 
         try:
             await context.bot.send_message(chat_id=uid, text=text, parse_mode="Markdown")

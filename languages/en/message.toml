@@ -92,7 +92,13 @@ evil_sees = "Fellow evil players: {evil_players}"
 dm_failed = "Could not DM {name}. Please start a private chat with the bot first."
 
 # Variant selection
-choose_variant = "Choose a role variant:"
+choose_variant = "Choose a role variant or customize:"
+custom_roles_button = "🎭 Custom Roles"
+custom_roles_dm_notice = "Check your DMs to pick custom roles."
+custom_roles_header = "**Custom Roles** ({current}/{total})\nAdd/remove roles with ➕/➖. Tap a role name for its description."
+custom_roles_confirm = "✅ Confirm & Start"
+custom_roles_full = "Role list is full."
+custom_roles_count_mismatch = "Role count doesn't match player count."
 
 # Team selection
 team_select_header = "📋 **Mission {mission}** | {tracker}\n👑 Leader: **{leader}**\nSelect **{size}** players for the team:"
@@ -155,6 +161,18 @@ game_summary_roles = "**Game Summary - Roles:**"
 game_summary_missions = "**Mission History:**"
 side_good = "Good"
 side_evil = "Evil"
+
+# Role names
+role_name_Merlin = "Merlin"
+role_name_Percival = "Percival"
+role_name_LoyalServant = "Loyal Servant"
+role_name_Assassin = "Assassin"
+role_name_Mordred = "Mordred"
+role_name_Morgana = "Morgana"
+role_name_Oberon = "Oberon"
+role_name_Minion = "Minion"
+role_name_Lancelot_Good = "Lancelot (Good)"
+role_name_Lancelot_Evil = "Lancelot (Evil)"
 
 # Role descriptions
 roles_list_header = "**All Roles:**"

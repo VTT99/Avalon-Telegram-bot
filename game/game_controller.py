@@ -125,6 +125,43 @@ class Controller:
 
         return True, "Game started"
 
+    def start_game_custom(self, roles: list[str]) -> tuple[bool, str]:
+        """Start the game with a custom role list chosen by GM."""
+        player_count = len(self.players)
+        if len(roles) != player_count:
+            return False, "Role count mismatch"
+
+        # Get mission config from first available variant for this player count
+        _, _, variants = self.get_available_setups()
+        if variants:
+            ppm = variants[0]["people_per_mission"]
+            fr = variants[0]["fails_required"]
+        else:
+            # Fallback: generate default mission config
+            ppm = [min(2 + i, player_count) for i in range(5)]
+            fr = [1, 1, 1, (2 if player_count >= 7 else 1), 1]
+
+        # Apply mode modifications (Lancelot won't double-apply since GM already picked roles)
+        self.active_modes = [create_mode(m) for m in self.enabled_modes
+                             if m != "lancelot"]  # skip lancelot modify_roles for custom
+        # But still instantiate lancelot for its on_game_start/on_mission_end hooks
+        if "lancelot" in self.enabled_modes:
+            self.active_modes.append(create_mode("lancelot"))
+
+        game_setup = {
+            "roles": roles,
+            "number_of_players_per_mission": ppm,
+            "fails_required": fr,
+        }
+
+        self.status = "team_select"
+        self.state = State(self.players, **game_setup)
+
+        for mode in self.active_modes:
+            mode.on_game_start(self.state)
+
+        return True, "Game started"
+
     def player_list_text(self):
         return "\n".join(f"- {name}" for name in self.players.values())
 
