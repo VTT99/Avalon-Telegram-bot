@@ -1012,6 +1012,7 @@ async def end_of_game(controller, context, group_id):
             parse_mode="Markdown"
         )
         await game_summary(controller, context, group_id)
+        await dm_end_results(controller, context, "evil", "end_reason_five_rejects")
         await reset_lobby(controller, context)
         return
 
@@ -1022,6 +1023,7 @@ async def end_of_game(controller, context, group_id):
             parse_mode="Markdown"
         )
         await game_summary(controller, context, group_id)
+        await dm_end_results(controller, context, "evil", "end_reason_missions")
         await reset_lobby(controller, context)
         return
 
@@ -1041,6 +1043,7 @@ async def end_of_game(controller, context, group_id):
                 parse_mode="Markdown"
             )
             await game_summary(controller, context, group_id)
+            await dm_end_results(controller, context, "good", "end_reason_missions")
             await reset_lobby(controller, context)
 
 
@@ -1073,6 +1076,7 @@ async def send_assassin_guess(context, controller, group_id):
             parse_mode="Markdown"
         )
         await game_summary(controller, context, group_id)
+        await dm_end_results(controller, context, "good", "end_reason_assassin_unreachable")
         await reset_lobby(controller, context)
         return
 
@@ -1105,6 +1109,8 @@ async def timeout_assassin_guess(context: ContextTypes.DEFAULT_TYPE):
             text=msg("assassin_correct", controller, target=target_name),
             parse_mode="Markdown"
         )
+        await game_summary(controller, context, group_id)
+        await dm_end_results(controller, context, "evil", "end_reason_assassin_correct")
     else:
         merlin_id = controller.state.get_merlin()
         merlin_name = controller.players.get(merlin_id, "Unknown")
@@ -1113,8 +1119,9 @@ async def timeout_assassin_guess(context: ContextTypes.DEFAULT_TYPE):
             text=msg("assassin_wrong", controller, target=target_name, merlin=merlin_name),
             parse_mode="Markdown"
         )
+        await game_summary(controller, context, group_id)
+        await dm_end_results(controller, context, "good", "end_reason_assassin_wrong")
 
-    await game_summary(controller, context, group_id)
     await reset_lobby(controller, context)
 
 
@@ -1148,6 +1155,8 @@ async def handle_assassin_guess(update: Update, context: ContextTypes.DEFAULT_TY
             text=msg("assassin_correct", controller, target=target_name),
             parse_mode="Markdown"
         )
+        await game_summary(controller, context, group_id)
+        await dm_end_results(controller, context, "evil", "end_reason_assassin_correct")
     else:
         merlin_id = controller.state.get_merlin()
         merlin_name = controller.players.get(merlin_id, "Unknown")
@@ -1156,8 +1165,9 @@ async def handle_assassin_guess(update: Update, context: ContextTypes.DEFAULT_TY
             text=msg("assassin_wrong", controller, target=target_name, merlin=merlin_name),
             parse_mode="Markdown"
         )
+        await game_summary(controller, context, group_id)
+        await dm_end_results(controller, context, "good", "end_reason_assassin_wrong")
 
-    await game_summary(controller, context, group_id)
     await reset_lobby(controller, context)
 
 
@@ -1277,6 +1287,31 @@ async def game_summary(controller, context, group_id):
         text="\n".join(lines),
         parse_mode="Markdown"
     )
+
+
+async def dm_end_results(controller, context, winner: str, reason: str):
+    """DM each player whether they won or lost and why.
+    winner: 'good' or 'evil'
+    reason: i18n key for the reason (e.g. 'end_reason_missions', 'end_reason_assassin_correct')
+    """
+    lang = controller.language
+    state = controller.state
+    reason_text = get_message(reason, lang=lang)
+
+    for uid, name in controller.players.items():
+        role = state.get_role(uid)
+        player_side = "evil" if is_evil_role(role) else "good"
+        won = player_side == winner
+
+        if won:
+            text = get_message("dm_you_won", lang=lang, role=role, reason=reason_text)
+        else:
+            text = get_message("dm_you_lost", lang=lang, role=role, reason=reason_text)
+
+        try:
+            await context.bot.send_message(chat_id=uid, text=text, parse_mode="Markdown")
+        except Exception:
+            pass
 
 
 async def reset_lobby(controller, context):

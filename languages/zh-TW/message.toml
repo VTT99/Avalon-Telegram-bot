@@ -122,6 +122,15 @@ loyalty_card_switch = "⚔️ **忠誠卡揭示：切換！** 蘭斯洛特玩家
 loyalty_card_no_switch = "⚔️ **忠誠卡揭示：不切換。** 忠誠不變。"
 loyalty_switched_role = "⚔️ 你的忠誠已切換！新角色：**{role}**"
 
+# 遊戲結束私訊
+dm_you_won = "🎉 **你贏了！** 你的角色：**{role}**\n{reason}"
+dm_you_lost = "💀 **你輸了。** 你的角色：**{role}**\n{reason}"
+end_reason_missions = "3個任務決定了結果。"
+end_reason_five_rejects = "連續5次隊伍提案被否決。"
+end_reason_assassin_correct = "刺客成功指認了梅林！"
+end_reason_assassin_wrong = "刺客未能指認梅林。"
+end_reason_assassin_unreachable = "無法聯繫刺客。"
+
 # 遊戲總結
 game_summary_roles = "**遊戲總結 - 角色：**"
 game_summary_missions = "**任務歷史：**"

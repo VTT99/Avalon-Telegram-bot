@@ -122,6 +122,15 @@ loyalty_card_switch = "⚔️ **Loyalty card revealed: SWITCH!** Lancelot player
 loyalty_card_no_switch = "⚔️ **Loyalty card revealed: No Switch.** Loyalties remain unchanged."
 loyalty_switched_role = "⚔️ Your loyalty has switched! Your new role: **{role}**"
 
+# End-of-game DM
+dm_you_won = "🎉 **You won!** Your role: **{role}**\n{reason}"
+dm_you_lost = "💀 **You lost.** Your role: **{role}**\n{reason}"
+end_reason_missions = "3 missions decided the outcome."
+end_reason_five_rejects = "5 team proposals were rejected in a row."
+end_reason_assassin_correct = "The Assassin correctly identified Merlin!"
+end_reason_assassin_wrong = "The Assassin failed to identify Merlin."
+end_reason_assassin_unreachable = "The Assassin could not be reached."
+
 # Game summary
 game_summary_roles = "**Game Summary - Roles:**"
 game_summary_missions = "**Mission History:**"
