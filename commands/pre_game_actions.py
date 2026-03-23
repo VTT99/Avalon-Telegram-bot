@@ -56,12 +56,12 @@ async def remove_lobby_join_button(context: ContextTypes.DEFAULT_TYPE, controlle
             pass
 
 
-async def _try_dm_player(context: ContextTypes.DEFAULT_TYPE, controller: Controller, user_id: int, user_name: str):
+async def _try_dm_player(context: ContextTypes.DEFAULT_TYPE, controller: Controller, user_id: int, user_name: str, group_name: str = ""):
     """Try to send a DM to the player. If it fails, notify the group."""
     try:
         await context.bot.send_message(
             chat_id=user_id,
-            text=_msg(controller, "join_dm_welcome")
+            text=_msg(controller, "join_dm_welcome", group_name=group_name)
         )
     except Exception:
         bot_info = await context.bot.get_me()
@@ -85,7 +85,7 @@ async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if success:
         await reply_to_lobby(context, controller, _msg(controller, key, name=user.first_name))
         await update_lobby_message(context, controller)
-        await _try_dm_player(context, controller, user.id, user.first_name)
+        await _try_dm_player(context, controller, user.id, user.first_name, group_name=chat.title or "")
     else:
         await update.message.reply_text(_msg(controller, key))
 
@@ -107,7 +107,7 @@ async def handle_join_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         await reply_to_lobby(context, controller, _msg(controller, key, name=user.first_name))
         await update_lobby_message(context, controller)
         await query.answer()
-        await _try_dm_player(context, controller, user.id, user.first_name)
+        await _try_dm_player(context, controller, user.id, user.first_name, group_name=query.message.chat.title or "")
     else:
         await query.answer(_msg(controller, key))
 

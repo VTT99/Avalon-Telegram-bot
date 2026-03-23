@@ -91,7 +91,7 @@ percival_sees = "梅林或莫甘娜（你不知道誰是誰）：{targets}"
 evil_sees = "你的邪惡夥伴：{evil_players}"
 dm_failed = "無法私訊 {name}。請先與機器人開啟私人對話。"
 dm_start_bot = "⚠️ {name}，請先[與我開始私人對話](https://t.me/{bot_username})，這樣我才能發送遊戲訊息給你！"
-join_dm_welcome = "🎲 你已加入遊戲！遊戲開始時我會發送你的角色資訊。"
+join_dm_welcome = "🎲 你已加入 {group_name} 的遊戲！遊戲開始時我會發送你的角色資訊。"
 
 # 角色選擇
 choose_variant = "選擇角色配置或自訂："
