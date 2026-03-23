@@ -1136,7 +1136,7 @@ async def handle_assassin_guess(update: Update, context: ContextTypes.DEFAULT_TY
     target_name = controller.players.get(target_uid, "Unknown")
 
     try:
-        await query.edit_message_text(f"You guessed: {target_name}")
+        await query.edit_message_text(msg("assassin_you_guessed", controller, target=target_name))
     except Exception:
         pass
     await query.answer()
