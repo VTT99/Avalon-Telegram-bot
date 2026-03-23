@@ -23,6 +23,7 @@ class Controller:
             "mission_vote": 30,
             "assassin_guess": 30,
             "investigate": 30,
+            "discussion": 0,  # 0 = disabled by default
         }
         self.allow_extend = False
         self.extend_used = False  # reset each phase

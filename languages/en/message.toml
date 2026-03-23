@@ -155,3 +155,36 @@ game_summary_roles = "**Game Summary - Roles:**"
 game_summary_missions = "**Mission History:**"
 side_good = "Good"
 side_evil = "Evil"
+
+# Role descriptions
+roles_list_header = "**All Roles:**"
+role_desc_Merlin = "Knows evil players (except Mordred)"
+role_desc_Percival = "Sees Merlin and Morgana (can't tell which)"
+role_desc_LoyalServant = "A loyal servant of Arthur"
+role_desc_Assassin = "Can assassinate Merlin at game end"
+role_desc_Mordred = "Hidden from Merlin"
+role_desc_Morgana = "Appears as Merlin to Percival"
+role_desc_Oberon = "Hidden from fellow evil, cannot see them"
+role_desc_Minion = "A minion of Mordred"
+role_desc_Lancelot_Good = "A noble knight whose loyalty may waver"
+role_desc_Lancelot_Evil = "A corrupted knight whose loyalty may waver"
+
+# Turn notification
+turn_notification = "👑 **It's your turn!** Select {size} players for Mission {mission}."
+
+# Discussion phase
+discussion_start = "💬 **Discussion time!** You have {minutes} minute(s) to discuss before the next mission."
+discussion_end = "💬 **Discussion over.** Moving to the next mission."
+config_stage_discussion = "Discussion"
+
+# Excalibur
+excalibur_announce = "🗡️ **{leader}** wields Excalibur! They may flip one team member's mission vote."
+excalibur_prompt = "🗡️ Choose a team member to flip their vote, or skip:"
+excalibur_skip = "Skip (don't use)"
+excalibur_used = "🗡️ **{leader}** used Excalibur on **{target}**! Their vote has been flipped."
+excalibur_skipped = "🗡️ Excalibur was not used."
+mode_name_excalibur = "Excalibur"
+
+# Statistics
+stats_header = "**Leaderboard:**"
+no_stats = "No games played yet in this group."

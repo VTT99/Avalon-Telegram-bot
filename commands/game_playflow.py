@@ -7,13 +7,13 @@ from game.roles import is_evil as is_evil_role, get_vision, evil_role_names
 from utils.language import get_message, get_button_text
 
 SPEED_PRESETS = {
-    "fast": {"lobby": 2, "team_select": 2, "team_vote": 2, "mission_vote": 2, "assassin_guess": 2, "investigate": 2},
-    "medium": {"lobby": 5, "team_select": 5, "team_vote": 5, "mission_vote": 5, "assassin_guess": 5, "investigate": 5},
-    "slow": {"lobby": 10, "team_select": 30, "team_vote": 30, "mission_vote": 30, "assassin_guess": 30, "investigate": 30},
-    "none": {"lobby": 0, "team_select": 0, "team_vote": 0, "mission_vote": 0, "assassin_guess": 0, "investigate": 0},
+    "fast": {"lobby": 2, "team_select": 2, "team_vote": 2, "mission_vote": 2, "assassin_guess": 2, "investigate": 2, "discussion": 0},
+    "medium": {"lobby": 5, "team_select": 5, "team_vote": 5, "mission_vote": 5, "assassin_guess": 5, "investigate": 5, "discussion": 2},
+    "slow": {"lobby": 10, "team_select": 30, "team_vote": 30, "mission_vote": 30, "assassin_guess": 30, "investigate": 30, "discussion": 5},
+    "none": {"lobby": 0, "team_select": 0, "team_vote": 0, "mission_vote": 0, "assassin_guess": 0, "investigate": 0, "discussion": 0},
 }
 
-STAGE_KEYS = ["lobby", "team_select", "team_vote", "mission_vote", "assassin_guess", "investigate"]
+STAGE_KEYS = ["lobby", "team_select", "team_vote", "mission_vote", "assassin_guess", "investigate", "discussion"]
 
 
 def get_game_from_callback(context, callback_data, prefix):
@@ -532,7 +532,36 @@ async def do_loyalty_switch(context, controller, group_id):
 
 
 async def _advance_to_next_mission(context, controller):
-    """Move to next mission's team selection."""
+    """Move to next mission, with optional discussion phase first."""
+    discussion_mins = controller.timeouts.get("discussion", 0)
+    if discussion_mins > 0:
+        controller.status = "discussion"
+        await context.bot.send_message(
+            chat_id=controller.group_id,
+            text=msg("discussion_start", controller, minutes=discussion_mins),
+            parse_mode="Markdown"
+        )
+        schedule_timeout_for_stage(context, controller, "discussion", timeout_discussion)
+    else:
+        await _do_advance(context, controller)
+
+
+async def timeout_discussion(context):
+    """Discussion phase ended, proceed to next mission."""
+    group_id = context.job.data
+    controller = context.bot_data.get(f"game_{group_id}")
+    if not controller or controller.status != "discussion":
+        return
+    await context.bot.send_message(
+        chat_id=group_id,
+        text=msg("discussion_end", controller),
+        parse_mode="Markdown"
+    )
+    await _do_advance(context, controller)
+
+
+async def _do_advance(context, controller):
+    """Actually advance to next mission's team selection."""
     controller.state.next_mission()
     controller.reset_round()
     controller.status = "team_select"
@@ -906,6 +935,18 @@ async def send_team_selection(context: ContextTypes.DEFAULT_TYPE, controller):
     )
     controller.team_message_id = m.message_id
 
+    # DM the leader a turn notification
+    leader_id = state.get_current_leader()
+    try:
+        await context.bot.send_message(
+            chat_id=leader_id,
+            text=msg("turn_notification", controller,
+                     mission=state.mission_number, size=team_size),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        pass
+
     # Schedule timeout for team selection
     schedule_timeout_for_stage(context, controller, "team_select", timeout_team_select)
 
@@ -1229,7 +1270,10 @@ async def timeout_mission_vote(context: ContextTypes.DEFAULT_TYPE):
             else:
                 controller.record_mission_vote(uid, True)
 
-    await resolve_mission(context, controller, group_id)
+    if _has_excalibur(controller):
+        await send_excalibur(context, controller, group_id)
+    else:
+        await resolve_mission(context, controller, group_id)
 
 
 async def handle_mission_vote(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1267,7 +1311,115 @@ async def handle_mission_vote(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     if controller.all_mission_votes_in():
         cancel_timeout(context, group_id)
+        # Check for Excalibur before revealing results
+        if _has_excalibur(controller):
+            await send_excalibur(context, controller, group_id)
+        else:
+            await resolve_mission(context, controller, group_id)
+
+
+def _has_excalibur(controller) -> bool:
+    return any(m.name == "excalibur" for m in controller.active_modes)
+
+
+async def send_excalibur(context, controller, group_id):
+    """Leader picks one team member to flip their mission vote."""
+    controller.status = "excalibur"
+    leader_id = controller.state.get_current_leader()
+    leader_name = controller.players[leader_id]
+
+    await context.bot.send_message(
+        chat_id=group_id,
+        text=msg("excalibur_announce", controller, leader=leader_name),
+        parse_mode="Markdown"
+    )
+
+    buttons = []
+    for uid in controller.selected_team:
+        name = controller.players[uid]
+        buttons.append([InlineKeyboardButton(
+            name, callback_data=f"excalibur|{group_id}|{uid}"
+        )])
+    # Option to skip
+    buttons.append([InlineKeyboardButton(
+        get_message("excalibur_skip", lang=controller.language),
+        callback_data=f"excalibur|{group_id}|skip"
+    )])
+
+    keyboard = InlineKeyboardMarkup(buttons)
+    try:
+        await context.bot.send_message(
+            chat_id=leader_id,
+            text=msg("excalibur_prompt", controller),
+            reply_markup=keyboard
+        )
+    except Exception:
+        # Can't DM leader, skip excalibur
         await resolve_mission(context, controller, group_id)
+        return
+
+    schedule_timeout_for_stage(context, controller, "mission_vote", timeout_excalibur)
+
+
+async def timeout_excalibur(context):
+    """Leader didn't use Excalibur in time, skip it."""
+    group_id = context.job.data
+    controller = context.bot_data.get(f"game_{group_id}")
+    if not controller or controller.status != "excalibur":
+        return
+    await context.bot.send_message(
+        chat_id=group_id,
+        text=msg("timeout_auto_action", controller),
+        parse_mode="Markdown"
+    )
+    await resolve_mission(context, controller, group_id)
+
+
+async def handle_excalibur(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Leader picks a team member to flip their vote, or skips."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+    target = parts[2]
+
+    from commands.game_admin import get_game
+    controller = get_game(context, group_id)
+    if not controller or controller.status != "excalibur":
+        await query.answer(get_message("no_active_phase"))
+        return
+
+    if query.from_user.id != controller.state.get_current_leader():
+        await query.answer(get_message("not_leader"))
+        return
+
+    cancel_timeout(context, group_id)
+
+    try:
+        await query.edit_message_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+    await query.answer()
+
+    if target != "skip":
+        target_uid = int(target)
+        target_name = controller.players.get(target_uid, "?")
+        # Flip the vote
+        if target_uid in controller.mission_votes:
+            controller.mission_votes[target_uid] = not controller.mission_votes[target_uid]
+
+        await context.bot.send_message(
+            chat_id=group_id,
+            text=msg("excalibur_used", controller, leader=controller.players[controller.state.get_current_leader()], target=target_name),
+            parse_mode="Markdown"
+        )
+    else:
+        await context.bot.send_message(
+            chat_id=group_id,
+            text=msg("excalibur_skipped", controller),
+            parse_mode="Markdown"
+        )
+
+    await resolve_mission(context, controller, group_id)
 
 
 async def resolve_mission(context, controller, group_id):
@@ -1472,6 +1624,25 @@ async def handle_assassin_guess(update: Update, context: ContextTypes.DEFAULT_TY
     await reset_lobby(controller, context)
 
 
+# --- Role descriptions ---
+
+async def roles_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/roles — list all roles and their descriptions."""
+    # Use game language if in a game, else context language
+    controller = _get_controller_from_update(update, context)
+    lang = controller.language if controller else None
+
+    from game.roles import ROLE_REGISTRY
+    lines = [get_message("roles_list_header", lang=lang)]
+    for role_name, info in ROLE_REGISTRY.items():
+        alignment = info["alignment"]
+        side = "😇" if alignment == "good" else "😈"
+        desc = get_message(f"role_desc_{role_name}", lang=lang)
+        lines.append(f"  {side} **{role_name}** — {desc}")
+
+    await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
+
+
 # --- In-game history commands ---
 
 async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1591,28 +1762,69 @@ async def game_summary(controller, context, group_id):
 
 
 async def dm_end_results(controller, context, winner: str, reason: str):
-    """DM each player whether they won or lost and why.
-    winner: 'good' or 'evil'
-    reason: i18n key for the reason (e.g. 'end_reason_missions', 'end_reason_assassin_correct')
-    """
+    """DM each player whether they won or lost and why. Also record stats."""
     lang = controller.language
     state = controller.state
     reason_text = get_message(reason, lang=lang)
+
+    # Update persistent stats in chat_data
+    chat_data = context.bot_data.get(f"_chatdata_{controller.group_id}")
+    # chat_data may not be available here; use a helper stored on controller
+    stats = context.bot_data.setdefault(f"stats_{controller.group_id}", {})
 
     for uid, name in controller.players.items():
         role = state.get_role(uid)
         player_side = "evil" if is_evil_role(role) else "good"
         won = player_side == winner
 
+        # Record stats
+        player_stats = stats.setdefault(str(uid), {"name": name, "wins": 0, "losses": 0, "games": 0})
+        player_stats["name"] = name  # update name in case it changed
+        player_stats["games"] += 1
         if won:
+            player_stats["wins"] += 1
             text = get_message("dm_you_won", lang=lang, role=role, reason=reason_text)
         else:
+            player_stats["losses"] += 1
             text = get_message("dm_you_lost", lang=lang, role=role, reason=reason_text)
 
         try:
             await context.bot.send_message(chat_id=uid, text=text, parse_mode="Markdown")
         except Exception:
             pass
+
+
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/stats — show win/loss leaderboard for this group."""
+    chat = update.effective_chat
+    if chat.type not in ("group", "supergroup"):
+        await update.message.reply_text(get_message("use_in_group", context))
+        return
+
+    stats = context.bot_data.get(f"stats_{chat.id}", {})
+    if not stats:
+        await update.message.reply_text(get_message("no_stats", context))
+        return
+
+    # Sort by win rate (min 1 game), then by total wins
+    entries = sorted(
+        stats.values(),
+        key=lambda s: (s["wins"] / max(s["games"], 1), s["wins"]),
+        reverse=True
+    )
+
+    lang = None
+    from commands.game_admin import get_game
+    controller = get_game(context, chat.id)
+    if controller:
+        lang = controller.language
+
+    lines = [get_message("stats_header", lang=lang)]
+    for i, s in enumerate(entries, 1):
+        rate = round(s["wins"] / max(s["games"], 1) * 100)
+        lines.append(f"  {i}. **{s['name']}** — {s['wins']}W/{s['losses']}L ({rate}%) [{s['games']} games]")
+
+    await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
 
 async def reset_lobby(controller, context):

@@ -27,6 +27,9 @@ from commands.game_playflow import (
     handle_config_extend,
     handle_config_done,
     config,
+    handle_excalibur,
+    roles_command,
+    stats_command,
     my_role,
     start_command,
     speed,
@@ -49,8 +52,10 @@ BOT_COMMANDS = [
     BotCommand("mode", "Toggle game modes (Lady/Lancelot)"),
     BotCommand("language", "Set language (game master)"),
     BotCommand("myrole", "Check your role (DM)"),
+    BotCommand("roles", "List all roles and descriptions"),
     BotCommand("history", "View mission history"),
     BotCommand("votehistory", "View detailed vote history"),
+    BotCommand("stats", "View win/loss leaderboard"),
 ]
 
 
@@ -79,8 +84,10 @@ def main():
     app.add_handler(CommandHandler("speed", speed))
     app.add_handler(CommandHandler("config", config))
     app.add_handler(CommandHandler("mode", mode))
+    app.add_handler(CommandHandler("roles", roles_command))
     app.add_handler(CommandHandler("history", history))
     app.add_handler(CommandHandler("votehistory", vote_history))
+    app.add_handler(CommandHandler("stats", stats_command))
 
     # Lobby callbacks
     app.add_handler(CallbackQueryHandler(set_language_callback, pattern="^lang_"))
@@ -99,6 +106,7 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_mode_callback, pattern=r"^mode\|"))
     app.add_handler(CallbackQueryHandler(handle_mode_done, pattern=r"^modedone\|"))
     app.add_handler(CallbackQueryHandler(handle_investigate, pattern=r"^investigate\|"))
+    app.add_handler(CallbackQueryHandler(handle_excalibur, pattern=r"^excalibur\|"))
 
     # Game flow callbacks
     app.add_handler(CallbackQueryHandler(handle_team_toggle, pattern=r"^team_-?\d+_\d+$"))

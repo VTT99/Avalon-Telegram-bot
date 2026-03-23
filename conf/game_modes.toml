@@ -7,3 +7,8 @@ emoji = "🔮"
 display_name = "Lancelot"
 description = "Loyalty cards may switch mid-game"
 emoji = "⚔️"
+
+[excalibur]
+display_name = "Excalibur"
+description = "After mission votes, leader can flip one team member's vote"
+emoji = "🗡️"

@@ -71,11 +71,21 @@ class Lancelot(GameMode):
         return None
 
 
+class Excalibur(GameMode):
+    name = "excalibur"
+
+    def on_mission_end(self, state, mission_number: int) -> str | None:
+        # Excalibur activates BEFORE mission result is revealed
+        # This is handled specially in resolve_mission — see game_playflow.py
+        return None
+
+
 # --- Registry ---
 
 MODE_CLASSES: dict[str, type[GameMode]] = {
     "lady_of_the_lake": LadyOfTheLake,
     "lancelot": Lancelot,
+    "excalibur": Excalibur,
 }
 
 

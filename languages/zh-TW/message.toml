@@ -155,3 +155,36 @@ game_summary_roles = "**遊戲總結 - 角色：**"
 game_summary_missions = "**任務歷史：**"
 side_good = "正義"
 side_evil = "邪惡"
+
+# 角色說明
+roles_list_header = "**所有角色：**"
+role_desc_Merlin = "知道邪惡玩家（莫德雷德除外）"
+role_desc_Percival = "看到梅林和莫甘娜（不知道誰是誰）"
+role_desc_LoyalServant = "亞瑟的忠實僕人"
+role_desc_Assassin = "遊戲結束時可以刺殺梅林"
+role_desc_Mordred = "梅林看不到"
+role_desc_Morgana = "在派西維爾眼中看起來像梅林"
+role_desc_Oberon = "對邪惡夥伴隱藏，也看不到他們"
+role_desc_Minion = "莫德雷德的爪牙"
+role_desc_Lancelot_Good = "忠誠可能動搖的高貴騎士"
+role_desc_Lancelot_Evil = "忠誠可能動搖的墮落騎士"
+
+# 回合通知
+turn_notification = "👑 **輪到你了！** 為任務 {mission} 選擇 {size} 名隊員。"
+
+# 討論階段
+discussion_start = "💬 **討論時間！** 你們有 {minutes} 分鐘討論下一個任務。"
+discussion_end = "💬 **討論結束。** 進入下一個任務。"
+config_stage_discussion = "討論"
+
+# 王者之劍
+excalibur_announce = "🗡️ **{leader}** 揮動了王者之劍！他可以翻轉一名隊員的任務投票。"
+excalibur_prompt = "🗡️ 選擇一名隊員翻轉其投票，或跳過："
+excalibur_skip = "跳過（不使用）"
+excalibur_used = "🗡️ **{leader}** 對 **{target}** 使用了王者之劍！其投票已被翻轉。"
+excalibur_skipped = "🗡️ 王者之劍未被使用。"
+mode_name_excalibur = "王者之劍"
+
+# 統計
+stats_header = "**排行榜：**"
+no_stats = "本群組尚未進行過任何遊戲。"
