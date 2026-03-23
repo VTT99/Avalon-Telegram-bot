@@ -1,0 +1,42 @@
+# Good roles
+[Merlin]
+alignment = "good"
+description = "Knows evil players (except Mordred)"
+
+[Percival]
+alignment = "good"
+description = "Sees Merlin and Morgana (but can't tell which)"
+
+[LoyalServant]
+alignment = "good"
+description = "A loyal servant of Arthur"
+
+# Evil roles
+[Assassin]
+alignment = "evil"
+description = "Can assassinate Merlin at game end"
+
+[Mordred]
+alignment = "evil"
+description = "Hidden from Merlin"
+
+[Morgana]
+alignment = "evil"
+description = "Appears as Merlin to Percival"
+
+[Oberon]
+alignment = "evil"
+description = "Hidden from fellow evil, cannot see them"
+
+[Minion]
+alignment = "evil"
+description = "A minion of Mordred"
+
+# Lancelot mode roles
+[Lancelot_Good]
+alignment = "good"
+description = "A noble knight whose loyalty may waver"
+
+[Lancelot_Evil]
+alignment = "evil"
+description = "A corrupted knight whose loyalty may waver"

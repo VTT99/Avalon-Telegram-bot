@@ -1,7 +1,7 @@
-from game.game_controller import AvalonGame
+from game.game_controller import Controller
 
 
-def format_player_list(game: AvalonGame) -> str:
+def format_player_list(game: Controller) -> str:
     if not game.players:
         return "No players have joined yet."
 

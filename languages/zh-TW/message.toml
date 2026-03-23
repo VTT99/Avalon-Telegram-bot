@@ -1,5 +1,84 @@
+# 大廳
 welcome = "🎲 遊戲由 {user} 建立。玩家現在可以輸入 /join 加入遊戲。"
 already_exists = "已經有一個遊戲在進行中。"
+no_game = "目前沒有進行中的遊戲。"
+
+# 語言
 language_selected = "你的語言已設定為繁體中文。"
 choose_language = "請選擇你偏好的語言："
-no_game = "目前沒有進行中的遊戲。"
+game_language_set = "遊戲語言已設定為繁體中文。"
+language_gm_only = "只有遊戲主持人可以更改語言。"
+
+# 速度
+choose_speed = "選擇遊戲速度（每階段自動操作超時時間）："
+speed_set = "遊戲速度已設定為 {speed}"
+timeout_auto_action = "⏰ **時間到！** 正在為未操作的玩家自動執行..."
+
+# 遊戲模式
+choose_mode = "切換遊戲模式："
+active_modes = "已啟用模式：{modes}"
+no_modes = "未啟用任何特殊模式。"
+
+# 角色分配
+roles_in_game = "**本局角色：** {roles}"
+roles_assigned = "角色已分配！請查看你的私人訊息。"
+your_role = "你的角色：**{role}**"
+merlin_sees = "你能看到的邪惡玩家：{evil_players}"
+percival_sees = "梅林或莫甘娜（你不知道誰是誰）：{targets}"
+evil_sees = "你的邪惡夥伴：{evil_players}"
+dm_failed = "無法私訊 {name}。請先與機器人開啟私人對話。"
+
+# 角色選擇
+choose_variant = "選擇角色配置："
+
+# 隊伍選擇
+team_select_header = "📋 **任務 {mission}** | {tracker}\n👑 隊長：**{leader}**\n選擇 **{size}** 位玩家組成隊伍："
+failed_proposals_warning = "⚠️ 已否決提案次數：{count}/5"
+confirm_team_button = "確認隊伍 ({current}/{size})"
+team_proposed = "👑 {leader} 提議的隊伍：**{team}**\n請查看私訊進行投票！"
+team_size_error = "請選擇剛好 {size} 位玩家。"
+not_leader = "只有隊長可以選擇隊伍。"
+
+# 隊伍投票
+team_vote_prompt = "對提議的隊伍投票：**{team}**"
+team_vote_recorded = "你投了：{vote}"
+votes_progress = "已收到投票：{count}/{total}"
+already_voted = "你已經投過票了。"
+team_vote_results = "**隊伍投票結果：**"
+team_approved = "✅ **隊伍通過！** 隊員們，請查看私訊。"
+team_rejected = "❌ **隊伍被否決！**（已否決次數：{failed_count}/5）"
+five_rejects = "💀 **連續5次提案被否決！邪惡陣營獲勝！**"
+
+# 任務投票
+mission_vote_prompt = "你正在執行任務！請投票："
+mission_vote_recorded = "你投了：{vote}"
+good_must_success = "正義玩家只能投成功。"
+mission_success = "✅ **任務 {mission} 成功！**\n失敗票數：{fails}\n進度：{tracker}"
+mission_fail = "❌ **任務 {mission} 失敗！**\n失敗票數：{fails}\n進度：{tracker}"
+
+# 遊戲結束
+good_wins = "🎉 **正義陣營獲勝！** 🎉"
+evil_wins = "💀 **3個任務失敗！邪惡陣營獲勝！**"
+assassin_phase = "🎯 **正義陣營贏得3個任務！**\n但刺客有一次機會指認梅林..."
+assassin_prompt = "🎯 你是刺客！猜猜誰是梅林："
+assassin_correct = "🎯 刺客猜測了 **{target}**...\n💀 **猜對了！{target} 就是梅林！邪惡陣營獲勝！**"
+assassin_wrong = "🎯 刺客猜測了 **{target}**...\n🎉 **猜錯了！梅林是 {merlin}！正義陣營獲勝！**"
+assassin_unreachable = "🎉 無法聯繫刺客。**正義陣營獲勝！** 🎉"
+
+# 湖中女神
+lady_announce = "🔮 **{holder}** 持有湖中女神，必須調查一名玩家。"
+lady_investigate_prompt = "🔮 選擇一名玩家進行調查："
+lady_result_good = "🔮 **{name}** 是**正義**陣營。"
+lady_result_evil = "🔮 **{name}** 是**邪惡**陣營。"
+lady_token_passed = "🔮 湖中女神從 **{old_holder}** 傳遞到 **{new_holder}**。"
+
+# 蘭斯洛特
+loyalty_card_switch = "⚔️ **忠誠卡揭示：切換！** 蘭斯洛特玩家交換陣營！"
+loyalty_card_no_switch = "⚔️ **忠誠卡揭示：不切換。** 忠誠不變。"
+loyalty_switched_role = "⚔️ 你的忠誠已切換！新角色：**{role}**"
+
+# 遊戲總結
+game_summary_roles = "**遊戲總結 - 角色：**"
+game_summary_missions = "**任務歷史：**"
+side_good = "正義"
+side_evil = "邪惡"

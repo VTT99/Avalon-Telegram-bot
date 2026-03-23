@@ -1,5 +1,84 @@
+# Lobby
 welcome = "🎲 Game created by {user}. Players can now /join."
 already_exists = "A game already exists."
+no_game = "No game in progress."
+
+# Language
 language_selected = "Your language is set to English."
 choose_language = "Please choose your preferred language:"
-no_game = "No game in progress."
+game_language_set = "Game language set to English."
+language_gm_only = "Only the game master can change the language."
+
+# Speed
+choose_speed = "Choose game speed (auto-action timeout per phase):"
+speed_set = "Game speed set to {speed}"
+timeout_auto_action = "⏰ **Time's up!** Auto-acting for inactive players..."
+
+# Game modes
+choose_mode = "Toggle game modes:"
+active_modes = "Active modes: {modes}"
+no_modes = "No special modes active."
+
+# Role assignment
+roles_in_game = "**Roles in this game:** {roles}"
+roles_assigned = "Roles assigned! Check your DMs."
+your_role = "Your role: **{role}**"
+merlin_sees = "Evil players visible to you: {evil_players}"
+percival_sees = "Merlin or Morgana (you don't know which): {targets}"
+evil_sees = "Fellow evil players: {evil_players}"
+dm_failed = "Could not DM {name}. Please start a private chat with the bot first."
+
+# Variant selection
+choose_variant = "Choose a role variant:"
+
+# Team selection
+team_select_header = "📋 **Mission {mission}** | {tracker}\n👑 Leader: **{leader}**\nSelect **{size}** players for the team:"
+failed_proposals_warning = "⚠️ Failed proposals: {count}/5"
+confirm_team_button = "Confirm Team ({current}/{size})"
+team_proposed = "👑 {leader} proposes: **{team}**\nCheck your DMs to vote!"
+team_size_error = "Select exactly {size} players."
+not_leader = "Only the leader can select the team."
+
+# Team vote
+team_vote_prompt = "Vote on the proposed team: **{team}**"
+team_vote_recorded = "You voted: {vote}"
+votes_progress = "Votes received: {count}/{total}"
+already_voted = "You already voted."
+team_vote_results = "**Team Vote Results:**"
+team_approved = "✅ **Team approved!** Team members, check your DMs."
+team_rejected = "❌ **Team rejected!** (Failed proposals: {failed_count}/5)"
+five_rejects = "💀 **5 team proposals rejected in a row! Evil wins!**"
+
+# Mission vote
+mission_vote_prompt = "You are on the mission! Cast your vote:"
+mission_vote_recorded = "You voted: {vote}"
+good_must_success = "Good players must vote Success."
+mission_success = "✅ **Mission {mission} succeeded!**\nFail votes: {fails}\nProgress: {tracker}"
+mission_fail = "❌ **Mission {mission} failed!**\nFail votes: {fails}\nProgress: {tracker}"
+
+# End of game
+good_wins = "🎉 **Good team wins!** 🎉"
+evil_wins = "💀 **3 missions failed! Evil wins!**"
+assassin_phase = "🎯 **Good team won 3 missions!**\nBut the Assassin gets one chance to identify Merlin..."
+assassin_prompt = "🎯 You are the Assassin! Guess who is Merlin:"
+assassin_correct = "🎯 The Assassin guessed **{target}**...\n💀 **Correct! {target} was Merlin! Evil wins!**"
+assassin_wrong = "🎯 The Assassin guessed **{target}**...\n🎉 **Wrong! Merlin was {merlin}! Good team wins!**"
+assassin_unreachable = "🎉 Assassin could not be reached. **Good team wins!** 🎉"
+
+# Lady of the Lake
+lady_announce = "🔮 **{holder}** holds the Lady of the Lake and must investigate a player."
+lady_investigate_prompt = "🔮 Choose a player to investigate:"
+lady_result_good = "🔮 **{name}** is on the **Good** side."
+lady_result_evil = "🔮 **{name}** is on the **Evil** side."
+lady_token_passed = "🔮 The Lady of the Lake passes from **{old_holder}** to **{new_holder}**."
+
+# Lancelot
+loyalty_card_switch = "⚔️ **Loyalty card revealed: SWITCH!** Lancelot players swap allegiance!"
+loyalty_card_no_switch = "⚔️ **Loyalty card revealed: No Switch.** Loyalties remain unchanged."
+loyalty_switched_role = "⚔️ Your loyalty has switched! Your new role: **{role}**"
+
+# Game summary
+game_summary_roles = "**Game Summary - Roles:**"
+game_summary_missions = "**Mission History:**"
+side_good = "Good"
+side_evil = "Evil"

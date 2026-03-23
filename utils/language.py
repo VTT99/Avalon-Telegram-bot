@@ -19,13 +19,15 @@ def load_toml(lang: str, file: str) -> dict:
     fallback = os.path.join(LANG_PATH, DEFAULT_LANG, f"{file}.toml")
     return toml.load(fallback) if os.path.exists(fallback) else {}
 
-def get_message(key: str, context, **kwargs) -> str:
-    lang = get_user_language(context.user_data)
+def get_message(key: str, context=None, lang: str = None, **kwargs) -> str:
+    if lang is None:
+        lang = get_user_language(context.user_data) if context else DEFAULT_LANG
     messages = load_toml(lang, "message")
     msg = messages.get(key) or load_toml(DEFAULT_LANG, "message").get(key, f"[{key}]")
     return msg.format(**kwargs)
 
-def get_button_text(key: str, context) -> str:
-    lang = get_user_language(context.user_data)
+def get_button_text(key: str, context=None, lang: str = None) -> str:
+    if lang is None:
+        lang = get_user_language(context.user_data) if context else DEFAULT_LANG
     buttons = load_toml(lang, "button")
     return buttons.get(key) or load_toml(DEFAULT_LANG, "button").get(key, f"[{key}]")

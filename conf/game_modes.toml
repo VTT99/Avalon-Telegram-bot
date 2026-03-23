@@ -1,0 +1,9 @@
+[lady_of_the_lake]
+display_name = "Lady of the Lake"
+description = "After missions 2-4, investigate a player's loyalty"
+emoji = "🔮"
+
+[lancelot]
+display_name = "Lancelot"
+description = "Loyalty cards may switch mid-game"
+emoji = "⚔️"

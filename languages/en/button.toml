@@ -1,0 +1,5 @@
+approve = "👍 Approve"
+reject = "👎 Reject"
+success = "✅ Success"
+fail = "❌ Fail"
+confirm_team = "Confirm Team"

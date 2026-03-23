@@ -1,4 +1,54 @@
-min_players = 5
+min_players = 2
 max_players = 10
-languages = ["en"]
+languages = ["en", "zh-TW"]
 default_language = "en"
+
+[roles_by_player_count]
+
+# Debug config (2 players)
+[[roles_by_player_count.2]]
+roles = ["Merlin", "Assassin"]
+people_per_mission = [1, 1, 1, 1, 1]
+fails_required = [1, 1, 1, 1, 1]
+
+# Debug config (3 players): 2 good, 1 evil
+[[roles_by_player_count.3]]
+roles = ["Merlin", "LoyalServant", "Assassin"]
+people_per_mission = [1, 2, 1, 2, 2]
+fails_required = [1, 1, 1, 1, 1]
+
+# 5 players: 3 good, 2 evil
+[[roles_by_player_count.5]]
+roles = ["Merlin", "Percival", "LoyalServant", "Assassin", "Morgana"]
+people_per_mission = [2, 3, 2, 3, 3]
+fails_required = [1, 1, 1, 1, 1]
+
+# 6 players: 4 good, 2 evil
+[[roles_by_player_count.6]]
+roles = ["Merlin", "Percival", "LoyalServant", "LoyalServant", "Assassin", "Morgana"]
+people_per_mission = [2, 3, 4, 3, 4]
+fails_required = [1, 1, 1, 1, 1]
+
+# 7 players: 4 good, 3 evil
+[[roles_by_player_count.7]]
+roles = ["Merlin", "Percival", "LoyalServant", "LoyalServant", "Assassin", "Morgana", "Oberon"]
+people_per_mission = [2, 3, 3, 4, 4]
+fails_required = [1, 1, 1, 2, 1]
+
+# 8 players: 5 good, 3 evil
+[[roles_by_player_count.8]]
+roles = ["Merlin", "Percival", "LoyalServant", "LoyalServant", "LoyalServant", "Assassin", "Morgana", "Minion"]
+people_per_mission = [3, 4, 4, 5, 5]
+fails_required = [1, 1, 1, 2, 1]
+
+# 9 players: 6 good, 3 evil
+[[roles_by_player_count.9]]
+roles = ["Merlin", "Percival", "LoyalServant", "LoyalServant", "LoyalServant", "LoyalServant", "Assassin", "Morgana", "Mordred"]
+people_per_mission = [3, 4, 4, 5, 5]
+fails_required = [1, 1, 1, 2, 1]
+
+# 10 players: 6 good, 4 evil
+[[roles_by_player_count.10]]
+roles = ["Merlin", "Percival", "LoyalServant", "LoyalServant", "LoyalServant", "LoyalServant", "Assassin", "Morgana", "Mordred", "Oberon"]
+people_per_mission = [3, 4, 4, 5, 5]
+fails_required = [1, 1, 1, 2, 1]
