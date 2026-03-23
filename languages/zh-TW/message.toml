@@ -19,7 +19,8 @@ player_limit_reached = "已達人數上限。請遊戲主持人輸入 /startgame
 player_joined = "{name} 加入了遊戲！"
 cant_leave_started = "遊戲開始後無法離開。"
 player_left = "{name} 離開了遊戲。"
-kick_usage = "回覆要踢出的玩家的訊息，或使用 /kick 玩家名稱。"
+kick_prompt = "選擇要踢出的玩家："
+no_players_to_kick = "沒有可以踢出的玩家。"
 
 # 遊戲開始
 need_more_players = "至少需要 {count} 位玩家。"

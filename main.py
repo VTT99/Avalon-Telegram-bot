@@ -4,7 +4,7 @@ from telegram import BotCommand, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from telegram.ext import PicklePersistence
 from commands.game_admin import new_game, start_game, handle_variant_callback
-from commands.pre_game_actions import join, leave, kick
+from commands.pre_game_actions import join, leave, kick, handle_kick_callback
 from commands.language import language, set_language_callback
 from commands.game_playflow import (
     handle_team_toggle,
@@ -72,6 +72,7 @@ def main():
     app.add_handler(CallbackQueryHandler(set_language_callback, pattern="^lang_"))
     app.add_handler(CallbackQueryHandler(handle_speed_callback, pattern=r"^speed_-?\d+_(fast|medium|slow|none)$"))
     app.add_handler(CallbackQueryHandler(handle_variant_callback, pattern=r"^variant_-?\d+_\d+$"))
+    app.add_handler(CallbackQueryHandler(handle_kick_callback, pattern=r"^kick\|"))
 
     # Mode callbacks (use | separator to avoid underscore conflicts in mode names)
     app.add_handler(CallbackQueryHandler(handle_mode_callback, pattern=r"^mode\|"))

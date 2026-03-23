@@ -79,28 +79,52 @@ async def kick(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(_msg(controller, "gm_only"))
         return
 
-    user_id_to_kick = None
-
-    # Method 1: Reply to a message from the player to kick
-    if update.message.reply_to_message:
-        target = update.message.reply_to_message.from_user
-        if target and target.id in controller.players:
-            user_id_to_kick = target.id
-
-    # Method 2: /kick PlayerName (match by first_name, case-insensitive)
-    if not user_id_to_kick and context.args:
-        search = " ".join(context.args).lower().lstrip("@")
-        for uid, name in controller.players.items():
-            if name.lower() == search:
-                user_id_to_kick = uid
-                break
-
-    if not user_id_to_kick:
-        await update.message.reply_text(_msg(controller, "kick_usage"))
+    if controller.status != "pre_game_lobby":
+        await update.message.reply_text(_msg(controller, "game_already_started"))
         return
 
-    success, key = controller.remove_player(user_id_to_kick)
-    kicked_name = controller.players.get(user_id_to_kick, context.args[0] if context.args else "?")
-    await update.message.reply_text(_msg(controller, key, name=kicked_name))
+    # Show inline buttons with player list (exclude GM)
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+    buttons = []
+    for uid, name in controller.players.items():
+        if uid != controller.master_id:
+            buttons.append([InlineKeyboardButton(
+                name, callback_data=f"kick|{chat.id}|{uid}"
+            )])
+
+    if not buttons:
+        await update.message.reply_text(_msg(controller, "no_players_to_kick"))
+        return
+
+    keyboard = InlineKeyboardMarkup(buttons)
+    await update.message.reply_text(
+        _msg(controller, "kick_prompt"), reply_markup=keyboard
+    )
+
+
+async def handle_kick_callback(update, context):
+    """GM picks a player to kick via inline button."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+    target_uid = int(parts[2])
+
+    controller = get_game(context, group_id)
+    if not controller or controller.status != "pre_game_lobby":
+        await query.answer(get_message("game_already_started"))
+        return
+    if not controller.is_game_master(query.from_user.id):
+        await query.answer(get_message("gm_only"))
+        return
+
+    name = controller.players.get(target_uid, "?")
+    success, key = controller.remove_player(target_uid)
+
+    try:
+        await query.edit_message_text(_msg(controller, key, name=name))
+    except Exception:
+        pass
+    await query.answer()
+
     if success:
         await update_lobby_message(context, controller)

@@ -19,7 +19,8 @@ player_limit_reached = "Player limit reached. Ask the game master to /startgame.
 player_joined = "{name} joined the game!"
 cant_leave_started = "Can't leave after game started."
 player_left = "{name} left the game."
-kick_usage = "Reply to a player's message, or use /kick PlayerName."
+kick_prompt = "Select a player to kick:"
+no_players_to_kick = "No players to kick."
 
 # Game start
 need_more_players = "Need at least {count} players."
