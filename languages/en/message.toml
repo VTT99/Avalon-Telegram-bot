@@ -177,6 +177,10 @@ role_name_Lancelot_Evil = "Lancelot (Evil)"
 
 # Role descriptions
 roles_list_header = "**All Roles:**"
+roles_guide_header = "**Role Guide** — tap a role to see its description."
+roles_guide_dm_sent = "📖 Role guide sent to your DM!"
+roles_guide_dm_failed = "❌ Couldn't send you a DM. Please start the bot first: @{bot_username}"
+roles_guide_detail = "{emoji} **{name}** [{side}]\n\n{desc}"
 role_desc_Merlin = "Knows evil players (except Mordred)"
 role_desc_Percival = "Sees Merlin and Morgana (can't tell which)"
 role_desc_LoyalServant = "A loyal servant of Arthur"
