@@ -12,3 +12,8 @@ emoji = "⚔️"
 display_name = "Excalibur"
 description = "After mission votes, leader can flip one team member's vote"
 emoji = "🗡️"
+
+[plot_cards]
+display_name = "Plot Cards"
+description = "Leader distributes plot cards after each mission"
+emoji = "🃏"

@@ -107,12 +107,86 @@ class Excalibur(GameMode):
         return None
 
 
+# --- Plot card definitions ---
+
+# Each card has a unique id, a type ("usable", "instant", or "effect"),
+# and a translation key prefix used to look up messages.
+
+PLOT_CARD_DEFS: list[dict] = [
+    # Usable cards — holder keeps them and may play during their turn
+    {"id": "lead_to_victory",     "type": "usable",  "key": "plot_lead_to_victory"},
+    {"id": "ambush",              "type": "usable",  "key": "plot_ambush"},
+    {"id": "king_returns",        "type": "usable",  "key": "plot_king_returns"},
+    {"id": "we_found_you",        "type": "usable",  "key": "plot_we_found_you"},
+    # Instant cards — take effect immediately when drawn
+    {"id": "restore_your_honor",  "type": "instant", "key": "plot_restore_your_honor"},
+    {"id": "show_your_strength",  "type": "instant", "key": "plot_show_your_strength"},
+    {"id": "show_your_true_nature", "type": "instant", "key": "plot_show_your_true_nature"},
+    {"id": "are_you_the_one",     "type": "instant", "key": "plot_are_you_the_one"},
+    # Effect cards — passive effects that modify the next round
+    {"id": "charge",              "type": "effect",  "key": "plot_charge"},
+]
+
+def _get_card_def(card_id: str) -> dict | None:
+    for c in PLOT_CARD_DEFS:
+        if c["id"] == card_id:
+            return c
+    return None
+
+
+def _build_plot_deck(player_count: int) -> list[str]:
+    """Build and shuffle a plot card deck appropriate for the player count."""
+    # Small games get a 7-card deck, larger games get 15 cards
+    if player_count <= 6:
+        deck_size = 7
+    else:
+        deck_size = 15
+
+    # Build the pool by cycling through all card ids
+    all_ids = [c["id"] for c in PLOT_CARD_DEFS]
+    deck = []
+    idx = 0
+    while len(deck) < deck_size:
+        deck.append(all_ids[idx % len(all_ids)])
+        idx += 1
+    random.shuffle(deck)
+    return deck
+
+
+class PlotCards(GameMode):
+    name = "plot_cards"
+
+    def on_game_start(self, state) -> None:
+        pc = len(state.players)
+        state.mode_data["plot_deck"] = _build_plot_deck(pc)
+        state.mode_data["plot_deck_index"] = 0
+        # How many cards the leader distributes each round
+        if pc <= 6:
+            state.mode_data["plot_cards_per_round"] = 1
+        elif pc <= 8:
+            state.mode_data["plot_cards_per_round"] = 2
+        else:
+            state.mode_data["plot_cards_per_round"] = 3
+        # Cards currently held by players: {user_id: [card_id, ...]}
+        state.mode_data["plot_hands"] = {}
+        # Flag: if Charge! is active, next team vote is public
+        state.mode_data["plot_public_vote"] = False
+
+    def on_mission_end(self, state, mission_number: int) -> str | None:
+        deck = state.mode_data.get("plot_deck", [])
+        deck_idx = state.mode_data.get("plot_deck_index", 0)
+        if deck_idx < len(deck):
+            return "plot_card_distribution"
+        return None
+
+
 # --- Registry ---
 
 MODE_CLASSES: dict[str, type[GameMode]] = {
     "lady_of_the_lake": LadyOfTheLake,
     "lancelot": Lancelot,
     "excalibur": Excalibur,
+    "plot_cards": PlotCards,
 }
 
 

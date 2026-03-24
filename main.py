@@ -32,6 +32,9 @@ from commands.game_playflow import (
     config,
     handle_excalibur,
     handle_skip_discussion,
+    handle_plot_distribute,
+    handle_plot_card_use,
+    handle_plot_card_use_target,
     roles_command,
     handle_role_info_callback,
     stats_command,
@@ -118,6 +121,9 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_investigate, pattern=r"^investigate\|"))
     app.add_handler(CallbackQueryHandler(handle_excalibur, pattern=r"^excalibur\|"))
     app.add_handler(CallbackQueryHandler(handle_skip_discussion, pattern=r"^skipdiscuss\|"))
+    app.add_handler(CallbackQueryHandler(handle_plot_distribute, pattern=r"^plotdist\|"))
+    app.add_handler(CallbackQueryHandler(handle_plot_card_use, pattern=r"^plotuse\|"))
+    app.add_handler(CallbackQueryHandler(handle_plot_card_use_target, pattern=r"^plotuse_t\|"))
 
     # Game flow callbacks
     app.add_handler(CallbackQueryHandler(handle_team_toggle, pattern=r"^team_-?\d+_\d+$"))

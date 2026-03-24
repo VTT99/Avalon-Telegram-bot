@@ -8,13 +8,13 @@ from game.roles import is_evil as is_evil_role, get_vision, evil_role_names, get
 from utils.language import get_message, get_button_text
 
 SPEED_PRESETS = {
-    "fast": {"lobby": 2, "team_select": 2, "team_vote": 2, "mission_vote": 2, "assassin_guess": 2, "investigate": 2, "discussion": 0},
-    "medium": {"lobby": 5, "team_select": 5, "team_vote": 5, "mission_vote": 5, "assassin_guess": 5, "investigate": 5, "discussion": 2},
-    "slow": {"lobby": 10, "team_select": 30, "team_vote": 30, "mission_vote": 30, "assassin_guess": 30, "investigate": 30, "discussion": 5},
-    "none": {"lobby": 0, "team_select": 0, "team_vote": 0, "mission_vote": 0, "assassin_guess": 0, "investigate": 0, "discussion": 0},
+    "fast": {"lobby": 2, "team_select": 2, "team_vote": 2, "mission_vote": 2, "assassin_guess": 2, "investigate": 2, "plot_cards": 2, "discussion": 0},
+    "medium": {"lobby": 5, "team_select": 5, "team_vote": 5, "mission_vote": 5, "assassin_guess": 5, "investigate": 5, "plot_cards": 5, "discussion": 2},
+    "slow": {"lobby": 10, "team_select": 30, "team_vote": 30, "mission_vote": 30, "assassin_guess": 30, "investigate": 30, "plot_cards": 30, "discussion": 5},
+    "none": {"lobby": 0, "team_select": 0, "team_vote": 0, "mission_vote": 0, "assassin_guess": 0, "investigate": 0, "plot_cards": 0, "discussion": 0},
 }
 
-STAGE_KEYS = ["lobby", "team_select", "team_vote", "mission_vote", "assassin_guess", "investigate", "discussion"]
+STAGE_KEYS = ["lobby", "team_select", "team_vote", "mission_vote", "assassin_guess", "investigate", "plot_cards", "discussion"]
 
 
 def get_game_from_callback(context, callback_data, prefix):
@@ -350,6 +350,8 @@ async def handle_mode_phase(context, controller, group_id, phase):
         await send_investigate(context, controller, group_id)
     elif phase == "loyalty_switch":
         await do_loyalty_switch(context, controller, group_id)
+    elif phase == "plot_card_distribution":
+        await send_plot_card_distribution(context, controller, group_id)
     else:
         # Unknown phase, skip to next mission
         await _advance_to_next_mission(context, controller)
@@ -532,6 +534,568 @@ async def do_loyalty_switch(context, controller, group_id):
     await _advance_to_next_mission(context, controller)
 
 
+# --- Plot card handlers ---
+
+async def send_plot_card_distribution(context, controller, group_id):
+    """Leader draws plot cards and distributes them to other players."""
+    state = controller.state
+    deck = state.mode_data.get("plot_deck", [])
+    deck_idx = state.mode_data.get("plot_deck_index", 0)
+    cards_per_round = state.mode_data.get("plot_cards_per_round", 1)
+
+    # Draw cards from the deck
+    drawn = []
+    while len(drawn) < cards_per_round and deck_idx < len(deck):
+        drawn.append(deck[deck_idx])
+        deck_idx += 1
+    state.mode_data["plot_deck_index"] = deck_idx
+
+    if not drawn:
+        await _advance_to_next_mission(context, controller)
+        return
+
+    # Store drawn cards for the distribution phase
+    state.mode_data["plot_drawn_cards"] = list(drawn)
+    state.mode_data["plot_cards_to_distribute"] = list(drawn)
+
+    leader_id = state.get_current_leader()
+    leader_name = controller.players.get(leader_id, "?")
+
+    from game.game_modes import _get_card_def
+
+    card_names = []
+    for card_id in drawn:
+        card_def = _get_card_def(card_id)
+        card_names.append(msg(card_def["key"] + "_name", controller) if card_def else card_id)
+
+    # Announce to group
+    await context.bot.send_message(
+        chat_id=group_id,
+        text=msg("plot_distribution_announce", controller,
+                 leader=leader_name, count=len(drawn)),
+        parse_mode="Markdown"
+    )
+
+    controller.status = "plot_card_distribution"
+
+    # DM leader with cards to distribute
+    await _send_plot_distribute_prompt(context, controller, leader_id, group_id)
+
+    schedule_timeout_for_stage(context, controller, "plot_cards", timeout_plot_cards)
+
+
+async def _send_plot_distribute_prompt(context, controller, leader_id, group_id):
+    """Send the leader a prompt to choose who gets the next plot card."""
+    state = controller.state
+    cards_left = state.mode_data.get("plot_cards_to_distribute", [])
+
+    if not cards_left:
+        # All cards distributed, process instant/effect cards and advance
+        await _process_distributed_plot_cards(context, controller, group_id)
+        return
+
+    from game.game_modes import _get_card_def
+    card_id = cards_left[0]
+    card_def = _get_card_def(card_id)
+    card_name = msg(card_def["key"] + "_name", controller) if card_def else card_id
+
+    # Build buttons: all players except leader
+    buttons = []
+    for uid, name in controller.players.items():
+        if uid != leader_id:
+            buttons.append([InlineKeyboardButton(
+                name, callback_data=f"plotdist|{group_id}|{uid}|{card_id}"
+            )])
+
+    keyboard = InlineKeyboardMarkup(buttons)
+    try:
+        await context.bot.send_message(
+            chat_id=leader_id,
+            text=msg("plot_choose_recipient", controller, card=card_name),
+            reply_markup=keyboard
+        )
+    except Exception:
+        # Can't DM leader, auto-distribute
+        await _auto_distribute_plot_cards(context, controller, group_id)
+
+
+async def handle_plot_distribute(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Leader picks who receives a plot card."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+    target_uid = int(parts[2])
+    card_id = parts[3]
+
+    from commands.game_admin import get_game
+    controller = get_game(context, group_id)
+    if not controller or controller.status != "plot_card_distribution":
+        await query.answer(get_message("no_active_phase"))
+        return
+
+    leader_id = controller.state.get_current_leader()
+    if query.from_user.id != leader_id:
+        await query.answer()
+        return
+
+    try:
+        await query.edit_message_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+    await query.answer()
+
+    state = controller.state
+    cards_left = state.mode_data.get("plot_cards_to_distribute", [])
+
+    # Remove the card from distribution queue
+    if card_id in cards_left:
+        cards_left.remove(card_id)
+
+    from game.game_modes import _get_card_def
+    card_def = _get_card_def(card_id)
+    card_name = msg(card_def["key"] + "_name", controller) if card_def else card_id
+    target_name = controller.players.get(target_uid, "?")
+
+    # Give card to the target player
+    hands = state.mode_data.setdefault("plot_hands", {})
+    hands.setdefault(target_uid, []).append(card_id)
+
+    # Announce to group
+    await context.bot.send_message(
+        chat_id=group_id,
+        text=msg("plot_card_given", controller,
+                 leader=controller.players.get(leader_id, "?"),
+                 target=target_name, card=card_name),
+        parse_mode="Markdown"
+    )
+
+    # DM the recipient about their card
+    card_desc = msg(card_def["key"] + "_desc", controller) if card_def else ""
+    try:
+        await context.bot.send_message(
+            chat_id=target_uid,
+            text=msg("plot_card_received", controller, card=card_name, desc=card_desc),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        pass
+
+    # Continue distributing remaining cards
+    if cards_left:
+        await _send_plot_distribute_prompt(context, controller, leader_id, group_id)
+    else:
+        cancel_timeout(context, group_id)
+        await _process_distributed_plot_cards(context, controller, group_id)
+
+
+async def _auto_distribute_plot_cards(context, controller, group_id):
+    """Auto-distribute remaining cards randomly when timeout occurs."""
+    state = controller.state
+    cards_left = state.mode_data.get("plot_cards_to_distribute", [])
+    leader_id = state.get_current_leader()
+
+    from game.game_modes import _get_card_def
+    hands = state.mode_data.setdefault("plot_hands", {})
+
+    non_leader = [uid for uid in controller.players if uid != leader_id]
+    for card_id in list(cards_left):
+        if not non_leader:
+            break
+        target_uid = _random.choice(non_leader)
+        hands.setdefault(target_uid, []).append(card_id)
+
+        card_def = _get_card_def(card_id)
+        card_name = msg(card_def["key"] + "_name", controller) if card_def else card_id
+        target_name = controller.players.get(target_uid, "?")
+
+        await context.bot.send_message(
+            chat_id=group_id,
+            text=msg("plot_card_given", controller,
+                     leader=controller.players.get(leader_id, "?"),
+                     target=target_name, card=card_name),
+            parse_mode="Markdown"
+        )
+
+        card_desc = msg(card_def["key"] + "_desc", controller) if card_def else ""
+        try:
+            await context.bot.send_message(
+                chat_id=target_uid,
+                text=msg("plot_card_received", controller, card=card_name, desc=card_desc),
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+
+    state.mode_data["plot_cards_to_distribute"] = []
+    await _process_distributed_plot_cards(context, controller, group_id)
+
+
+async def timeout_plot_cards(context):
+    """Auto-distribute plot cards on timeout."""
+    group_id = context.job.data
+    controller = context.bot_data.get(f"game_{group_id}")
+    if not controller or controller.status != "plot_card_distribution":
+        return
+
+    await context.bot.send_message(
+        chat_id=group_id,
+        text=msg("timeout_auto_action", controller),
+        parse_mode="Markdown"
+    )
+    await _auto_distribute_plot_cards(context, controller, group_id)
+
+
+async def _process_distributed_plot_cards(context, controller, group_id):
+    """Process instant and effect cards that were just distributed."""
+    state = controller.state
+    drawn = state.mode_data.get("plot_drawn_cards", [])
+    hands = state.mode_data.get("plot_hands", {})
+
+    from game.game_modes import _get_card_def
+
+    for uid, card_list in list(hands.items()):
+        for card_id in list(card_list):
+            if card_id not in drawn:
+                continue  # only process cards from this round
+            card_def = _get_card_def(card_id)
+            if not card_def:
+                continue
+
+            if card_def["type"] == "instant":
+                await _resolve_instant_card(context, controller, group_id, uid, card_id)
+                # Remove instant card after use
+                if card_id in hands.get(uid, []):
+                    hands[uid].remove(card_id)
+            elif card_def["type"] == "effect":
+                await _resolve_effect_card(context, controller, group_id, uid, card_id)
+                # Remove effect card after applying
+                if card_id in hands.get(uid, []):
+                    hands[uid].remove(card_id)
+            # "usable" cards stay in hand for player to use later
+
+    state.mode_data["plot_drawn_cards"] = []
+    await _advance_to_next_mission(context, controller)
+
+
+async def _resolve_instant_card(context, controller, group_id, holder_uid, card_id):
+    """Resolve an instant plot card effect."""
+    state = controller.state
+    holder_name = controller.players.get(holder_uid, "?")
+
+    from game.game_modes import _get_card_def
+    card_def = _get_card_def(card_id)
+    card_name = msg(card_def["key"] + "_name", controller) if card_def else card_id
+
+    if card_id == "restore_your_honor":
+        # Steal a plot card from another player
+        # Find a random player with cards
+        targets = [(uid, cards) for uid, cards in state.mode_data.get("plot_hands", {}).items()
+                   if uid != holder_uid and cards]
+        if targets:
+            target_uid, target_cards = _random.choice(targets)
+            stolen_card = _random.choice(target_cards)
+            target_cards.remove(stolen_card)
+            state.mode_data["plot_hands"].setdefault(holder_uid, []).append(stolen_card)
+            target_name = controller.players.get(target_uid, "?")
+            stolen_def = _get_card_def(stolen_card)
+            stolen_name = msg(stolen_def["key"] + "_name", controller) if stolen_def else stolen_card
+            await context.bot.send_message(
+                chat_id=group_id,
+                text=msg("plot_restore_honor_result", controller,
+                         holder=holder_name, target=target_name, card=stolen_name),
+                parse_mode="Markdown"
+            )
+        else:
+            await context.bot.send_message(
+                chat_id=group_id,
+                text=msg("plot_no_cards_to_steal", controller, holder=holder_name),
+                parse_mode="Markdown"
+            )
+
+    elif card_id == "show_your_strength":
+        # Leader reveals their loyalty to the card holder
+        leader_id = state.get_current_leader()
+        leader_name = controller.players.get(leader_id, "?")
+        leader_alignment = "evil" if state.is_evil(leader_id) else "good"
+        alignment_display = msg("side_evil", controller) if leader_alignment == "evil" else msg("side_good", controller)
+
+        try:
+            await context.bot.send_message(
+                chat_id=holder_uid,
+                text=msg("plot_show_strength_result", controller,
+                         leader=leader_name, side=alignment_display),
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+        await context.bot.send_message(
+            chat_id=group_id,
+            text=msg("plot_show_strength_announce", controller,
+                     holder=holder_name, leader=leader_name),
+            parse_mode="Markdown"
+        )
+
+    elif card_id == "show_your_true_nature":
+        # Holder reveals their own loyalty to all players
+        holder_alignment = "evil" if state.is_evil(holder_uid) else "good"
+        alignment_display = msg("side_evil", controller) if holder_alignment == "evil" else msg("side_good", controller)
+        await context.bot.send_message(
+            chat_id=group_id,
+            text=msg("plot_true_nature_result", controller,
+                     holder=holder_name, side=alignment_display),
+            parse_mode="Markdown"
+        )
+
+    elif card_id == "are_you_the_one":
+        # Check a neighbor's loyalty
+        player_ids = list(controller.players.keys())
+        holder_idx = player_ids.index(holder_uid) if holder_uid in player_ids else 0
+        # Pick the neighbor to the right
+        neighbor_idx = (holder_idx + 1) % len(player_ids)
+        neighbor_uid = player_ids[neighbor_idx]
+        neighbor_name = controller.players.get(neighbor_uid, "?")
+        neighbor_alignment = "evil" if state.is_evil(neighbor_uid) else "good"
+        alignment_display = msg("side_evil", controller) if neighbor_alignment == "evil" else msg("side_good", controller)
+
+        try:
+            await context.bot.send_message(
+                chat_id=holder_uid,
+                text=msg("plot_are_you_the_one_result", controller,
+                         neighbor=neighbor_name, side=alignment_display),
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+        await context.bot.send_message(
+            chat_id=group_id,
+            text=msg("plot_are_you_the_one_announce", controller,
+                     holder=holder_name, neighbor=neighbor_name),
+            parse_mode="Markdown"
+        )
+
+
+async def _resolve_effect_card(context, controller, group_id, holder_uid, card_id):
+    """Resolve an effect plot card."""
+    holder_name = controller.players.get(holder_uid, "?")
+
+    if card_id == "charge":
+        # Force the next team vote to be public (visible in group)
+        controller.state.mode_data["plot_public_vote"] = True
+        await context.bot.send_message(
+            chat_id=group_id,
+            text=msg("plot_charge_result", controller, holder=holder_name),
+            parse_mode="Markdown"
+        )
+
+
+async def handle_plot_card_use(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Player uses a usable plot card during team selection phase."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+    card_id = parts[2]
+
+    from commands.game_admin import get_game
+    controller = get_game(context, group_id)
+    if not controller or controller.status not in ("team_select", "team_vote"):
+        await query.answer(get_message("no_active_phase"))
+        return
+
+    user_id = query.from_user.id
+    state = controller.state
+    hands = state.mode_data.get("plot_hands", {})
+    player_cards = hands.get(user_id, [])
+
+    if card_id not in player_cards:
+        await query.answer(msg("plot_no_such_card", controller))
+        return
+
+    try:
+        await query.edit_message_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+    await query.answer()
+
+    # Remove card from hand
+    player_cards.remove(card_id)
+    player_name = controller.players.get(user_id, "?")
+
+    from game.game_modes import _get_card_def
+    card_def = _get_card_def(card_id)
+    card_name = msg(card_def["key"] + "_name", controller) if card_def else card_id
+
+    if card_id == "lead_to_victory":
+        # User becomes the new leader
+        player_ids = list(controller.players.keys())
+        if user_id in player_ids:
+            new_idx = player_ids.index(user_id)
+            state.current_leader_index = new_idx
+            controller.reset_round()
+            controller.status = "team_select"
+            await context.bot.send_message(
+                chat_id=group_id,
+                text=msg("plot_lead_to_victory_result", controller,
+                         player=player_name),
+                parse_mode="Markdown"
+            )
+            await send_team_selection(context, controller)
+
+    elif card_id == "ambush":
+        # Examine mission vote cards (only during mission_vote or right after)
+        # Show the holder the current mission votes
+        votes_info = []
+        for uid, vote in controller.mission_votes.items():
+            name = controller.players.get(uid, "?")
+            vote_text = "✅" if vote else "❌"
+            votes_info.append(f"{name}: {vote_text}")
+
+        if votes_info:
+            result_text = "\n".join(votes_info)
+        else:
+            result_text = msg("plot_ambush_no_votes", controller)
+
+        try:
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=msg("plot_ambush_result", controller, votes=result_text),
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+        await context.bot.send_message(
+            chat_id=group_id,
+            text=msg("plot_ambush_announce", controller, player=player_name),
+            parse_mode="Markdown"
+        )
+
+    elif card_id == "king_returns":
+        # Reject the currently approved team (only during team_vote)
+        if controller.status == "team_vote":
+            cancel_timeout(context, group_id)
+            controller.reset_round()
+            controller.status = "team_select"
+            await context.bot.send_message(
+                chat_id=group_id,
+                text=msg("plot_king_returns_result", controller,
+                         player=player_name),
+                parse_mode="Markdown"
+            )
+            await send_team_selection(context, controller)
+        else:
+            await context.bot.send_message(
+                chat_id=group_id,
+                text=msg("plot_card_wrong_phase", controller),
+                parse_mode="Markdown"
+            )
+            # Return card
+            player_cards.append(card_id)
+
+    elif card_id == "we_found_you":
+        # Force another player to play with open loyalty
+        # Pick a target (for simplicity, target the next player)
+        player_ids = list(controller.players.keys())
+        targets = [uid for uid in player_ids if uid != user_id]
+        if targets:
+            target_uid = targets[0]
+            target_name = controller.players.get(target_uid, "?")
+            target_alignment = "evil" if state.is_evil(target_uid) else "good"
+            alignment_display = msg("side_evil", controller) if target_alignment == "evil" else msg("side_good", controller)
+
+            await context.bot.send_message(
+                chat_id=group_id,
+                text=msg("plot_we_found_you_result", controller,
+                         player=player_name, target=target_name, side=alignment_display),
+                parse_mode="Markdown"
+            )
+
+
+async def handle_plot_card_use_target(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Player selects a target for a usable plot card like 'We Found You'."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+    card_id = parts[2]
+    target_uid = int(parts[3])
+
+    from commands.game_admin import get_game
+    controller = get_game(context, group_id)
+    if not controller:
+        await query.answer(get_message("no_active_phase"))
+        return
+
+    user_id = query.from_user.id
+    state = controller.state
+    hands = state.mode_data.get("plot_hands", {})
+    player_cards = hands.get(user_id, [])
+
+    if card_id not in player_cards:
+        await query.answer(msg("plot_no_such_card", controller))
+        return
+
+    try:
+        await query.edit_message_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+    await query.answer()
+
+    player_cards.remove(card_id)
+    player_name = controller.players.get(user_id, "?")
+    target_name = controller.players.get(target_uid, "?")
+
+    if card_id == "we_found_you":
+        target_alignment = "evil" if state.is_evil(target_uid) else "good"
+        alignment_display = msg("side_evil", controller) if target_alignment == "evil" else msg("side_good", controller)
+        await context.bot.send_message(
+            chat_id=group_id,
+            text=msg("plot_we_found_you_result", controller,
+                     player=player_name, target=target_name, side=alignment_display),
+            parse_mode="Markdown"
+        )
+
+
+async def send_plot_card_play_prompt(context, controller, user_id):
+    """Send a player a prompt to optionally play a usable plot card."""
+    state = controller.state
+    hands = state.mode_data.get("plot_hands", {})
+    player_cards = hands.get(user_id, [])
+
+    from game.game_modes import _get_card_def
+    usable_cards = [c for c in player_cards if _get_card_def(c) and _get_card_def(c)["type"] == "usable"]
+
+    if not usable_cards:
+        return
+
+    buttons = []
+    for card_id in usable_cards:
+        card_def = _get_card_def(card_id)
+        card_name = msg(card_def["key"] + "_name", controller) if card_def else card_id
+
+        if card_id == "we_found_you":
+            # Need target selection — use different callback pattern
+            for uid, name in controller.players.items():
+                if uid != user_id:
+                    buttons.append([InlineKeyboardButton(
+                        f"🃏 {card_name} → {name}",
+                        callback_data=f"plotuse_t|{controller.group_id}|{card_id}|{uid}"
+                    )])
+        else:
+            buttons.append([InlineKeyboardButton(
+                f"🃏 {card_name}",
+                callback_data=f"plotuse|{controller.group_id}|{card_id}"
+            )])
+
+    if buttons:
+        keyboard = InlineKeyboardMarkup(buttons)
+        try:
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=msg("plot_use_prompt", controller),
+                reply_markup=keyboard
+            )
+        except Exception:
+            pass
+
+
 async def _advance_to_next_mission(context, controller):
     """Move to next mission, with optional discussion phase first."""
     discussion_mins = controller.timeouts.get("discussion", 0)
@@ -617,6 +1181,7 @@ STAGE_LABELS = {
     "mission_vote": "config_stage_mission_vote",
     "assassin_guess": "config_stage_assassin",
     "investigate": "config_stage_investigate",
+    "plot_cards": "config_stage_plot_cards",
 }
 
 TIMEOUT_OPTIONS = [1, 2, 5, 10, 60, 0]  # 0 = no limit
@@ -1008,6 +1573,11 @@ async def send_team_selection(context: ContextTypes.DEFAULT_TYPE, controller):
     # Schedule timeout for team selection
     schedule_timeout_for_stage(context, controller, "team_select", timeout_team_select)
 
+    # If plot cards mode is active, prompt players who have usable cards
+    if _has_plot_cards(controller):
+        for uid in controller.players:
+            await send_plot_card_play_prompt(context, controller, uid)
+
 
 async def timeout_team_select(context: ContextTypes.DEFAULT_TYPE):
     """Auto-select team and confirm if leader hasn't acted in time."""
@@ -1134,7 +1704,7 @@ async def handle_team_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE
         parse_mode="Markdown"
     )
 
-    # DM each player with approve/reject buttons
+    # DM each player with approve/reject buttons (or post in group if Charge! is active)
     keyboard = InlineKeyboardMarkup([
         [
             InlineKeyboardButton(btn("approve", controller),
@@ -1143,16 +1713,31 @@ async def handle_team_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE
                                  callback_data=f"teamvote_{group_id}_reject"),
         ]
     ])
-    for uid, name in controller.players.items():
-        try:
-            await context.bot.send_message(
-                chat_id=uid,
-                text=msg("team_vote_prompt", controller, team=", ".join(team_names)),
-                reply_markup=keyboard,
-                parse_mode="Markdown"
-            )
-        except Exception as e:
-            print(f"Failed to DM {name} for team vote: {e}")
+
+    public_vote = (controller.state.mode_data.get("plot_public_vote", False)
+                   if hasattr(controller.state, "mode_data") else False)
+
+    if public_vote:
+        # Charge! card active — post vote buttons in group
+        await context.bot.send_message(
+            chat_id=group_id,
+            text=msg("plot_public_vote_prompt", controller, team=", ".join(team_names)),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+        # Reset flag after use
+        controller.state.mode_data["plot_public_vote"] = False
+    else:
+        for uid, name in controller.players.items():
+            try:
+                await context.bot.send_message(
+                    chat_id=uid,
+                    text=msg("team_vote_prompt", controller, team=", ".join(team_names)),
+                    reply_markup=keyboard,
+                    parse_mode="Markdown"
+                )
+            except Exception as e:
+                print(f"Failed to DM {name} for team vote: {e}")
 
     # Schedule timeout for team vote
     schedule_timeout_for_stage(context, controller, "team_vote", timeout_team_vote)
@@ -1378,6 +1963,10 @@ async def handle_mission_vote(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 def _has_excalibur(controller) -> bool:
     return any(m.name == "excalibur" for m in controller.active_modes)
+
+
+def _has_plot_cards(controller) -> bool:
+    return any(m.name == "plot_cards" for m in controller.active_modes)
 
 
 async def send_excalibur(context, controller, group_id):
