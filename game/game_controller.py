@@ -45,6 +45,9 @@ class Controller:
         self.vote_history: list[dict] = []
         self.show_roles_in_group: bool = True  # whether to announce role list at game start
 
+        # Spectators: user_id -> name
+        self.spectators: dict[int, str] = {}
+
     def add_player(self, user_id, name):
         if self.status != "pre_game_lobby":
             return False, "game_already_started"
@@ -165,6 +168,20 @@ class Controller:
 
     def player_list_text(self):
         return "\n".join(f"- {name}" for name in self.players.values())
+
+    def add_spectator(self, user_id: int, name: str) -> tuple[bool, str]:
+        if user_id in self.players:
+            return False, "spectator_is_player"
+        if user_id in self.spectators:
+            return False, "already_spectating"
+        self.spectators[user_id] = name
+        return True, "spectator_added"
+
+    def remove_spectator(self, user_id: int) -> tuple[bool, str]:
+        if user_id not in self.spectators:
+            return False, "not_spectating"
+        self.spectators.pop(user_id)
+        return True, "spectator_removed"
 
     # --- Mode helpers ---
 

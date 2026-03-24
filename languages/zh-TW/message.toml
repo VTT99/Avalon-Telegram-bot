@@ -238,3 +238,12 @@ mode_name_excalibur = "王者之劍"
 # 統計
 stats_header = "**排行榜：**"
 no_stats = "本群組尚未進行過任何遊戲。"
+
+# 觀戰模式
+spectator_game_not_started = "遊戲尚未開始。請等待遊戲開始後，再使用 /watch。"
+spectator_added = "👁️ {name} 正在觀戰！（目前 {count} 位觀戰者）"
+already_spectating = "你已經在觀戰這場遊戲了。"
+spectator_is_player = "你是此遊戲的玩家，無法同時觀戰。"
+spectator_removed = "👁️ {name} 已停止觀戰。"
+not_spectating = "你並未在觀戰此遊戲。"
+spectators_watching = "👁️ {count} 位觀戰者正在觀戰"

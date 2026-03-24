@@ -14,6 +14,7 @@ from commands.game_admin import (
     handle_custom_role_action, handle_confirm_start, handle_cancel_start,
 )
 from commands.pre_game_actions import join, leave, kick, handle_kick_callback
+from commands.spectator import watch, unwatch
 from commands.language import language, set_language_callback
 from commands.game_playflow import (
     handle_team_toggle,
@@ -62,6 +63,8 @@ BOT_COMMANDS = [
     BotCommand("history", "View mission history"),
     BotCommand("votehistory", "View detailed vote history"),
     BotCommand("stats", "View win/loss leaderboard"),
+    BotCommand("watch", "Watch the game as a spectator"),
+    BotCommand("unwatch", "Stop spectating the game"),
 ]
 
 
@@ -95,6 +98,8 @@ def main():
     app.add_handler(CommandHandler("history", history))
     app.add_handler(CommandHandler("votehistory", vote_history))
     app.add_handler(CommandHandler("stats", stats_command))
+    app.add_handler(CommandHandler("watch", watch))
+    app.add_handler(CommandHandler("unwatch", unwatch))
 
     # Lobby callbacks
     app.add_handler(CallbackQueryHandler(set_language_callback, pattern="^lang_"))
