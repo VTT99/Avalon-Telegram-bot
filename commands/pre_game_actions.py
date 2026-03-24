@@ -1,11 +1,15 @@
 # commands/pre_game_actions.py
 
+import logging
+
 from telegram import Update
 from telegram.ext import ContextTypes
 from commands.game_admin import get_game
 from game.game_controller import Controller
 from utils.message_helper import format_player_list
 from utils.language import get_message
+
+logger = logging.getLogger(__name__)
 
 
 def _msg(controller, key, **kwargs):
@@ -31,7 +35,7 @@ async def update_lobby_message(context: ContextTypes.DEFAULT_TYPE, controller: C
                 text=f"{_msg(controller, 'welcome', user=creator.user.first_name)}\n\n{format_player_list(controller)}"
             )
         except Exception as e:
-            print(e)
+            logger.warning("Failed to update lobby message: %s", e)
 
 
 async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):

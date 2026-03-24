@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -71,6 +72,17 @@ async def post_init(application):
 
 def main():
     load_dotenv()
+
+    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+    logging.basicConfig(
+        level=getattr(logging, log_level, logging.INFO),
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
+    logger = logging.getLogger(__name__)
+
+    if os.environ.get("AVALON_DEBUG") == "1":
+        logger.warning("⚠️  Debug mode enabled (2-4 player configs available)")
+
     BOT_TOKEN = os.getenv("BOT_TOKEN")
 
     os.makedirs("data", exist_ok=True)
@@ -127,10 +139,8 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_assassin_guess, pattern=r"^assassin_-?\d+_\d+$"))
     app.add_handler(CallbackQueryHandler(handle_role_info_callback, pattern=r"^roleinfo\|"))
 
-    print("Bot is running...")
+    logger.info("Bot is running...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
-    if os.environ.get("AVALON_DEBUG") == "1":
-        print("⚠️  Debug mode enabled (2-4 player configs available)")
     main()

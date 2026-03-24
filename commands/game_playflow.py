@@ -1,11 +1,14 @@
 # commands/game_playflow.py
 
+import logging
 import random as _random
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import Forbidden, BadRequest
 from telegram.ext import ContextTypes
 from game.roles import is_evil as is_evil_role, get_vision, evil_role_names, get_role_display_name, get_alignment
 from utils.language import get_message, get_button_text
+
+logger = logging.getLogger(__name__)
 
 SPEED_PRESETS = {
     "fast": {"lobby": 2, "team_select": 2, "team_vote": 2, "mission_vote": 2, "assassin_guess": 2, "investigate": 2, "discussion": 0},
@@ -900,7 +903,7 @@ async def dm_assign_roles(context: ContextTypes.DEFAULT_TYPE, controller):
                 chat_id=user_id, text=text, parse_mode="Markdown"
             )
         except Exception as e:
-            print(f"Failed to DM {name} ({user_id}): {e}")
+            logger.warning("Failed to DM %s (%s): %s", name, user_id, e)
             await context.bot.send_message(
                 chat_id=controller.group_id,
                 text=msg("dm_failed", controller, name=name)
@@ -1152,7 +1155,7 @@ async def handle_team_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE
                 parse_mode="Markdown"
             )
         except Exception as e:
-            print(f"Failed to DM {name} for team vote: {e}")
+            logger.warning("Failed to DM %s for team vote: %s", name, e)
 
     # Schedule timeout for team vote
     schedule_timeout_for_stage(context, controller, "team_vote", timeout_team_vote)
@@ -1301,7 +1304,7 @@ async def send_mission_vote(context, controller, group_id):
                 reply_markup=keyboard
             )
         except Exception as e:
-            print(f"Failed to DM {name} for mission vote: {e}")
+            logger.warning("Failed to DM %s for mission vote: %s", name, e)
 
     # Schedule timeout for mission vote
     schedule_timeout_for_stage(context, controller, "mission_vote", timeout_mission_vote)
@@ -1582,7 +1585,7 @@ async def send_assassin_guess(context, controller, group_id):
             reply_markup=keyboard
         )
     except Exception as e:
-        print(f"Failed to DM assassin: {e}")
+        logger.warning("Failed to DM assassin: %s", e)
         await context.bot.send_message(
             chat_id=group_id,
             text=msg("assassin_unreachable", controller),
