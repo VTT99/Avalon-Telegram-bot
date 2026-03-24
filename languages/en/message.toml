@@ -104,6 +104,8 @@ custom_show_roles = "Roles visible to group"
 custom_hide_roles = "Roles hidden from group"
 hide_roles_gm_warning = "⚠️ Warning: You are a player in this game. Hiding roles gives you an unfair advantage since you chose them!"
 roles_hidden = "🙈 **Role composition is hidden for this game.**"
+custom_lovers_label = "💞 The Lovers (Tristan & Iseult)"
+custom_lovers_info = "Tristan & Iseult are The Lovers — two good roles that know each other's identity. They must be added as a pair (counts as 2 roles)."
 
 # Mode warnings
 lady_low_player_warning = "⚠️ **Lady of the Lake** is designed for 7+ players (you have {count}). Continue anyway?"
@@ -185,6 +187,8 @@ role_name_Minion = "Minion"
 role_name_Guinevere = "Guinevere"
 role_name_Lancelot_Good = "Lancelot (Good)"
 role_name_Lancelot_Evil = "Lancelot (Evil)"
+role_name_Tristan = "Tristan"
+role_name_Iseult = "Iseult"
 
 # Role descriptions
 roles_list_header = "**All Roles:**"
@@ -205,6 +209,8 @@ guinevere_sees = "Lancelots (you don't know their loyalty): {targets}"
 role_tip_Guinevere = "💡 You can see both Lancelots but don't know which is good and which is evil. Use this to guide your team and figure out who to trust as loyalties may switch!"
 role_desc_Lancelot_Good = "A noble knight whose loyalty may waver"
 role_desc_Lancelot_Evil = "A corrupted knight whose loyalty may waver"
+role_desc_Tristan = "Knows the identity of Iseult. A loyal servant of Arthur."
+role_desc_Iseult = "Knows the identity of Tristan. A loyal servant of Arthur."
 
 # Role gameplay tips (shown in DM after role assignment)
 role_tip_Merlin = "💡 You can see the evil players (except Mordred). Lead the good team to victory — but be subtle! If the Assassin discovers you're Merlin, they can assassinate you and win the game."
@@ -217,6 +223,9 @@ role_tip_Oberon = "💡 You are evil but hidden from your fellow evil players �
 role_tip_Minion = "💡 You know who the other evil players are. Work together to fail missions and protect your team's identity."
 role_tip_Lancelot_Good = "💡 You start on the good side, but your loyalty may switch during the game. Be prepared for your allegiance to change!"
 role_tip_Lancelot_Evil = "💡 You start on the evil side, but your loyalty may switch during the game. Be prepared for your allegiance to change!"
+role_tip_Tristan = "💡 You and Iseult are The Lovers — you know each other's identity. You are both on the good side but have no other special powers."
+role_tip_Iseult = "💡 You and Tristan are The Lovers — you know each other's identity. You are both on the good side but have no other special powers."
+lovers_see = "💞 Your beloved: {targets}"
 
 # Turn notification
 turn_notification = "👑 **It's your turn!** Select {size} players for Mission {mission}."

@@ -174,6 +174,8 @@ def _build_custom_roles_keyboard(controller):
     # If Lancelot mode not enabled, hide Lancelot roles
     if "lancelot" not in controller.enabled_modes:
         available_roles = [r for r in available_roles if not r.startswith("Lancelot") and r != "Guinevere"]
+    # Always hide individual Tristan/Iseult — they are managed as a pair via the lovers row
+    available_roles = [r for r in available_roles if r not in ("Tristan", "Iseult")]
 
     buttons = []
     for role_name in available_roles:
@@ -192,6 +194,23 @@ def _build_custom_roles_keyboard(controller):
             InlineKeyboardButton(f"➕", callback_data=f"cr|{controller.group_id}|add|{role_name}"),
         ]
         buttons.append(row)
+
+    # The Lovers pair row (Tristan & Iseult must be added together)
+    lovers_count = role_count.get("Tristan", 0) + role_count.get("Iseult", 0)
+    lovers_active = lovers_count == 2
+    lovers_label = _msg(controller, "custom_lovers_label")
+    if lovers_active:
+        lovers_label += " ✅"
+    buttons.append([
+        InlineKeyboardButton(
+            lovers_label,
+            callback_data=f"cr|{controller.group_id}|lovers_toggle|Tristan"
+        ),
+        InlineKeyboardButton(
+            "ℹ️",
+            callback_data=f"cr|{controller.group_id}|lovers_info|Tristan"
+        ),
+    ])
 
     # Show/hide roles toggle
     show_icon = "👁️" if controller.show_roles_in_group else "🙈"
@@ -243,6 +262,28 @@ async def handle_custom_role_action(update: Update, context: ContextTypes.DEFAUL
         else:
             await query.answer()
             return
+    elif action == "lovers_toggle":
+        # Add or remove Tristan & Iseult as a pair.
+        # Using 'or' for removal so any partial state is always cleaned up.
+        has_tristan = "Tristan" in controller.custom_roles
+        has_iseult = "Iseult" in controller.custom_roles
+        if has_tristan or has_iseult:
+            # Remove both (handles partial pairs too)
+            if "Tristan" in controller.custom_roles:
+                controller.custom_roles.remove("Tristan")
+            if "Iseult" in controller.custom_roles:
+                controller.custom_roles.remove("Iseult")
+        else:
+            # Add both — need room for 2
+            if len(controller.custom_roles) + 2 > player_count:
+                await query.answer(_msg(controller, "custom_roles_full"))
+                return
+            controller.custom_roles.append("Tristan")
+            controller.custom_roles.append("Iseult")
+    elif action == "lovers_info":
+        desc = get_message("custom_lovers_info", lang=lang)
+        await query.answer(desc, show_alert=True)
+        return
     elif action == "info":
         from game.roles import get_role_display_name
         desc = get_message(f"role_desc_{role_name}", lang=lang)

@@ -104,6 +104,8 @@ custom_show_roles = "角色對群組可見"
 custom_hide_roles = "角色對群組隱藏"
 hide_roles_gm_warning = "⚠️ 警告：你是這場遊戲的玩家。隱藏角色會給你不公平的優勢，因為你選擇了角色！"
 roles_hidden = "🙈 **本局角色配置已隱藏。**"
+custom_lovers_label = "💞 戀人（崔斯坦與伊索爾德）"
+custom_lovers_info = "崔斯坦與伊索爾德是戀人——兩個正義角色，彼此知道對方的身份。必須成對加入（佔用2個角色名額）。"
 
 # 模式警告
 lady_low_player_warning = "⚠️ **湖中女神**設計為7人以上遊戲（目前有{count}人）。是否仍要繼續？"
@@ -185,6 +187,8 @@ role_name_Minion = "爪牙"
 role_name_Guinevere = "乖妮薇兒"
 role_name_Lancelot_Good = "蘭斯洛特（正義）"
 role_name_Lancelot_Evil = "蘭斯洛特（邪惡）"
+role_name_Tristan = "崔斯坦"
+role_name_Iseult = "伊索爾德"
 
 # 角色說明
 roles_list_header = "**所有角色：**"
@@ -205,6 +209,8 @@ guinevere_sees = "蘭斯洛特們（你不知道他們的忠誠）：{targets}"
 role_tip_Guinevere = "💡 你能看到兩位蘭斯洛特，但不知道誰是正義誰是邪惡。利用這些資訊引導隊伍，注意忠誠可能會切換！"
 role_desc_Lancelot_Good = "忠誠可能動搖的高貴騎士"
 role_desc_Lancelot_Evil = "忠誠可能動搖的墮落騎士"
+role_desc_Tristan = "知道伊索爾德的身份。亞瑟的忠實僕人。"
+role_desc_Iseult = "知道崔斯坦的身份。亞瑟的忠實僕人。"
 
 # 角色遊戲提示（角色分配後私訊顯示）
 role_tip_Merlin = "💡 你能看到邪惡玩家（莫德雷德除外）。引導正義陣營走向勝利——但要低調！如果刺客發現你是梅林，他們可以刺殺你贏得遊戲。"
@@ -217,6 +223,9 @@ role_tip_Oberon = "💡 你是邪惡陣營但對其他邪惡玩家隱藏——�
 role_tip_Minion = "💡 你知道其他邪惡玩家是誰。一起合作破壞任務並保護隊友的身份。"
 role_tip_Lancelot_Good = "💡 你一開始是正義陣營，但你的忠誠可能在遊戲中切換。準備好應對陣營的變化！"
 role_tip_Lancelot_Evil = "💡 你一開始是邪惡陣營，但你的忠誠可能在遊戲中切換。準備好應對陣營的變化！"
+role_tip_Tristan = "💡 你和伊索爾德是戀人——你們知道彼此的身份。你們都是正義陣營，沒有其他特殊能力。"
+role_tip_Iseult = "💡 你和崔斯坦是戀人——你們知道彼此的身份。你們都是正義陣營，沒有其他特殊能力。"
+lovers_see = "💞 你的愛人：{targets}"
 
 # 回合通知
 turn_notification = "👑 **輪到你了！** 為任務 {mission} 選擇 {size} 名隊員。"
