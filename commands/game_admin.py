@@ -292,6 +292,9 @@ async def _check_mode_warnings(context, controller, group_id):
     if "lady_of_the_lake" in controller.enabled_modes and player_count < 7:
         warnings.append(_msg(controller, "lady_low_player_warning", count=player_count))
 
+    if "lady_of_the_sea" in controller.enabled_modes and player_count < 7:
+        warnings.append(_msg(controller, "lady_sea_low_player_warning", count=player_count))
+
     if not warnings:
         return False
 

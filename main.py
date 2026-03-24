@@ -55,7 +55,7 @@ BOT_COMMANDS = [
     BotCommand("kick", "Kick a player (game master)"),
     BotCommand("speed", "Quick speed preset"),
     BotCommand("timeoutconfig", "Configure per-stage timeouts"),
-    BotCommand("mode", "Toggle game modes (Lady/Lancelot)"),
+    BotCommand("mode", "Toggle game modes (Lady/Lancelot/Sea)"),
     BotCommand("language", "Set language (game master)"),
     BotCommand("myrole", "Check your role (DM)"),
     BotCommand("roles", "List all roles and descriptions"),

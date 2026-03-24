@@ -80,6 +80,7 @@ choose_mode = "切換遊戲模式："
 active_modes = "已啟用模式：{modes}"
 no_modes = "未啟用任何特殊模式。"
 mode_name_lady_of_the_lake = "湖中女神"
+mode_name_lady_of_the_sea = "海之女神"
 mode_name_lancelot = "蘭斯洛特"
 
 # 角色分配
@@ -107,6 +108,7 @@ roles_hidden = "🙈 **本局角色配置已隱藏。**"
 
 # 模式警告
 lady_low_player_warning = "⚠️ **湖中女神**設計為7人以上遊戲（目前有{count}人）。是否仍要繼續？"
+lady_sea_low_player_warning = "⚠️ **海之女神**設計為7人以上遊戲（目前有{count}人）。是否仍要繼續？"
 confirm_start_anyway = "▶️ 繼續開始"
 cancel_start = "❌ 取消"
 start_cancelled = "開始已取消。"
@@ -152,6 +154,13 @@ lady_investigate_prompt = "🔮 選擇一名玩家進行調查："
 lady_result_good = "🔮 **{name}** 是**正義**陣營。"
 lady_result_evil = "🔮 **{name}** 是**邪惡**陣營。"
 lady_token_passed = "🔮 湖中女神從 **{old_holder}** 傳遞到 **{new_holder}**。"
+
+# 海之女神
+lady_sea_announce = "🌊 **{holder}** 持有海之女神，必須調查一名玩家。"
+lady_sea_investigate_prompt = "🌊 選擇一名玩家進行調查："
+lady_sea_result_good = "🌊 **{name}** 是**正義**陣營。"
+lady_sea_result_evil_role = "🌊 **{name}** 是**邪惡**陣營。其角色是 **{role}**。"
+lady_sea_token_passed = "🌊 海之女神從 **{old_holder}** 傳遞到 **{new_holder}**。"
 
 # 蘭斯洛特
 loyalty_card_switch = "⚔️ **忠誠卡揭示：切換！** 蘭斯洛特玩家交換陣營！"

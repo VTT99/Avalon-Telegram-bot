@@ -356,16 +356,19 @@ async def handle_mode_phase(context, controller, group_id, phase):
 
 
 async def send_investigate(context, controller, group_id):
-    """Lady of the Lake: holder picks a player to investigate."""
+    """Lady of the Lake / Lady of the Sea: holder picks a player to investigate."""
     state = controller.state
     holder_id = state.mode_data.get("lady_holder")
     investigated = state.mode_data.get("investigated", set())
     holder_name = controller.players.get(holder_id, "?")
 
+    is_sea = any(m.name == "lady_of_the_sea" for m in controller.active_modes)
+    announce_key = "lady_sea_announce" if is_sea else "lady_announce"
+
     # Announce to group
     await context.bot.send_message(
         chat_id=group_id,
-        text=msg("lady_announce", controller, holder=holder_name),
+        text=msg(announce_key, controller, holder=holder_name),
         parse_mode="Markdown"
     )
 
@@ -383,10 +386,11 @@ async def send_investigate(context, controller, group_id):
         return
 
     keyboard = InlineKeyboardMarkup(buttons)
+    prompt_key = "lady_sea_investigate_prompt" if is_sea else "lady_investigate_prompt"
     try:
         await context.bot.send_message(
             chat_id=holder_id,
-            text=msg("lady_investigate_prompt", controller),
+            text=msg(prompt_key, controller),
             reply_markup=keyboard
         )
     except Exception:
@@ -453,17 +457,24 @@ async def _resolve_investigate(context, controller, group_id, target_uid):
     target_name = controller.players.get(target_uid, "?")
     target_role = state.get_role(target_uid)
 
-    from game.roles import is_evil as _is_evil
+    from game.roles import is_evil as _is_evil, get_role_display_name
+    is_sea = any(m.name == "lady_of_the_sea" for m in controller.active_modes)
+
     if _is_evil(target_role):
-        result_key = "lady_result_evil"
+        if is_sea:
+            role_display = get_role_display_name(target_role, controller.language)
+            result_text = msg("lady_sea_result_evil_role", controller, name=target_name, role=role_display)
+        else:
+            result_text = msg("lady_result_evil", controller, name=target_name)
     else:
-        result_key = "lady_result_good"
+        good_key = "lady_sea_result_good" if is_sea else "lady_result_good"
+        result_text = msg(good_key, controller, name=target_name)
 
     # DM the result to the holder (private!)
     try:
         await context.bot.send_message(
             chat_id=holder_id,
-            text=msg(result_key, controller, name=target_name),
+            text=result_text,
             parse_mode="Markdown"
         )
     except Exception:
@@ -475,9 +486,10 @@ async def _resolve_investigate(context, controller, group_id, target_uid):
 
     # Announce token pass to group (no result revealed!)
     holder_name = controller.players.get(holder_id, "?")
+    token_key = "lady_sea_token_passed" if is_sea else "lady_token_passed"
     await context.bot.send_message(
         chat_id=group_id,
-        text=msg("lady_token_passed", controller,
+        text=msg(token_key, controller,
                  old_holder=holder_name, new_holder=target_name),
         parse_mode="Markdown"
     )

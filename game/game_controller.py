@@ -170,10 +170,15 @@ class Controller:
 
     def toggle_mode(self, mode_name: str) -> bool:
         """Toggle a mode on/off. Returns True if now enabled."""
+        from game.game_modes import MODE_CONFLICTS
         if mode_name in self.enabled_modes:
             self.enabled_modes.remove(mode_name)
             return False
         else:
+            # Disable conflicting modes
+            for conflict in MODE_CONFLICTS.get(mode_name, []):
+                if conflict in self.enabled_modes:
+                    self.enabled_modes.remove(conflict)
             self.enabled_modes.append(mode_name)
             return True
 

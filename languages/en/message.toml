@@ -80,6 +80,7 @@ choose_mode = "Toggle game modes:"
 active_modes = "Active modes: {modes}"
 no_modes = "No special modes active."
 mode_name_lady_of_the_lake = "Lady of the Lake"
+mode_name_lady_of_the_sea = "Lady of the Sea"
 mode_name_lancelot = "Lancelot"
 
 # Role assignment
@@ -107,6 +108,7 @@ roles_hidden = "🙈 **Role composition is hidden for this game.**"
 
 # Mode warnings
 lady_low_player_warning = "⚠️ **Lady of the Lake** is designed for 7+ players (you have {count}). Continue anyway?"
+lady_sea_low_player_warning = "⚠️ **Lady of the Sea** is designed for 7+ players (you have {count}). Continue anyway?"
 confirm_start_anyway = "▶️ Start anyway"
 cancel_start = "❌ Cancel"
 start_cancelled = "Start cancelled."
@@ -152,6 +154,13 @@ lady_investigate_prompt = "🔮 Choose a player to investigate:"
 lady_result_good = "🔮 **{name}** is on the **Good** side."
 lady_result_evil = "🔮 **{name}** is on the **Evil** side."
 lady_token_passed = "🔮 The Lady of the Lake passes from **{old_holder}** to **{new_holder}**."
+
+# Lady of the Sea
+lady_sea_announce = "🌊 **{holder}** holds the Lady of the Sea and must investigate a player."
+lady_sea_investigate_prompt = "🌊 Choose a player to investigate:"
+lady_sea_result_good = "🌊 **{name}** is on the **Good** side."
+lady_sea_result_evil_role = "🌊 **{name}** is on the **Evil** side. Their role is **{role}**."
+lady_sea_token_passed = "🌊 The Lady of the Sea passes from **{old_holder}** to **{new_holder}**."
 
 # Lancelot
 loyalty_card_switch = "⚔️ **Loyalty card revealed: SWITCH!** Lancelot players swap allegiance!"
