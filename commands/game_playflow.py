@@ -1979,3 +1979,120 @@ async def reset_lobby(controller, context):
     """Remove the game from bot_data."""
     controller.status = "game_over"
     context.bot_data.pop(f"game_{controller.group_id}", None)
+
+
+# --- Revealer ability ---
+
+async def reveal_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/reveal — Revealer privately shows their Good loyalty card to another player."""
+    chat = update.effective_chat
+    user = update.effective_user
+
+    if chat.type not in ("group", "supergroup"):
+        await update.message.reply_text(get_message("use_in_group", context))
+        return
+
+    from commands.game_admin import get_game
+    controller = get_game(context, chat.id)
+    if not controller:
+        await update.message.reply_text(get_message("revealer_no_game", lang=None))
+        return
+
+    lang = controller.language
+
+    if not controller.state or controller.status in ("pre_game_lobby", "game_over"):
+        await update.message.reply_text(get_message("revealer_game_not_started", lang=lang))
+        return
+
+    role = controller.state.get_role(user.id)
+    if role != "Revealer":
+        await update.message.reply_text(get_message("revealer_not_revealer", lang=lang))
+        return
+
+    if getattr(controller, "revealer_used", False):
+        await update.message.reply_text(get_message("revealer_already_used", lang=lang))
+        return
+
+    # Build player list (excluding the Revealer themselves)
+    buttons = []
+    for uid, name in controller.players.items():
+        if uid != user.id:
+            buttons.append([InlineKeyboardButton(
+                name, callback_data=f"reveal|{chat.id}|{uid}"
+            )])
+
+    if not buttons:
+        return
+
+    keyboard = InlineKeyboardMarkup(buttons)
+    try:
+        await context.bot.send_message(
+            chat_id=user.id,
+            text=get_message("revealer_select_prompt", lang=lang),
+            reply_markup=keyboard
+        )
+        await update.message.reply_text(get_message("revealer_dm_notice", lang=lang))
+    except (Forbidden, BadRequest):
+        bot_username = (await context.bot.get_me()).username
+        await update.message.reply_text(
+            get_message("roles_guide_dm_failed", lang=lang, bot_username=bot_username)
+        )
+
+
+async def handle_reveal_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Revealer selects a target to reveal their Good loyalty card to."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+    target_uid = int(parts[2])
+
+    from commands.game_admin import get_game
+    controller = get_game(context, group_id)
+    if not controller or not controller.state:
+        await query.answer()
+        return
+
+    lang = controller.language
+    revealer_uid = query.from_user.id
+
+    # Validate the caller is still the Revealer and hasn't used the ability
+    role = controller.state.get_role(revealer_uid)
+    if role != "Revealer":
+        await query.answer(get_message("revealer_not_revealer", lang=lang))
+        return
+
+    if getattr(controller, "revealer_used", False):
+        await query.answer(get_message("revealer_already_used", lang=lang))
+        return
+
+    controller.revealer_used = True
+
+    revealer_name = controller.players.get(revealer_uid, "?")
+    target_name = controller.players.get(target_uid, "?")
+
+    # DM the target
+    try:
+        await context.bot.send_message(
+            chat_id=target_uid,
+            text=get_message("revealer_received", lang=lang, revealer=revealer_name),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        pass
+
+    # Announce in group
+    await context.bot.send_message(
+        chat_id=group_id,
+        text=get_message("revealer_group_announce", lang=lang),
+        parse_mode="Markdown"
+    )
+
+    # Confirm to the Revealer in DM
+    try:
+        await query.edit_message_text(
+            get_message("revealer_confirm", lang=lang, target=target_name),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        pass
+    await query.answer()

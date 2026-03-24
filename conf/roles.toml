@@ -11,6 +11,10 @@ description = "Sees Merlin and Morgana (but can't tell which)"
 alignment = "good"
 description = "A loyal servant of Arthur"
 
+[Revealer]
+alignment = "good"
+description = "Can reveal their own loyalty card to another player once per game"
+
 # Evil roles
 [Assassin]
 alignment = "evil"
