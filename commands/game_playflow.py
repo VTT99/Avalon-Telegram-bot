@@ -1792,7 +1792,7 @@ async def handle_role_info_callback(update: Update, context: ContextTypes.DEFAUL
     alignment = info["alignment"]
     emoji = ROLE_EMOJIS.get(role_name, "❓")
     display = get_role_display_name(role_name, lang)
-    desc = get_message(f"role_desc_{role_name}", lang=lang)
+    desc = info["description"]
     side = _get_side_label(alignment, lang)
 
     text = get_message("roles_guide_detail", lang=lang, emoji=emoji, name=display, side=side, desc=desc)
