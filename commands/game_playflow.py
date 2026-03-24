@@ -1709,13 +1709,13 @@ ROLE_EMOJIS = {
 }
 
 ROLE_SIDE_LABELS = {
-    "good": "😇 Good",
-    "evil": "😈 Evil",
+    "good": "Good",
+    "evil": "Evil",
 }
 
 ROLE_SIDE_LABELS_ZH = {
-    "good": "😇 正義",
-    "evil": "😈 邪惡",
+    "good": "正義",
+    "evil": "邪惡",
 }
 
 
