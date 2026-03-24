@@ -1683,18 +1683,18 @@ ROLE_EMOJIS = {
 }
 
 ROLE_SIDE_LABELS = {
-    "good": "😇 Good",
-    "evil": "😈 Evil",
+    "good": "Good",
+    "evil": "Evil",
 }
 
 ROLE_SIDE_LABELS_ZH = {
-    "good": "😇 正義",
-    "evil": "😈 邪惡",
+    "good": "正義",
+    "evil": "邪惡",
 }
 
 
 def _build_role_info_keyboard(lang: str | None) -> InlineKeyboardMarkup:
-    """Build a 3-column inline keyboard with one button per role."""
+    """Build a 2-column inline keyboard with one button per role."""
     from game.roles import ROLE_REGISTRY
     buttons = []
     for role_name, info in ROLE_REGISTRY.items():
@@ -1706,8 +1706,8 @@ def _build_role_info_keyboard(lang: str | None) -> InlineKeyboardMarkup:
                 callback_data=f"roleinfo|{role_name}",
             )
         )
-    # Arrange into rows of 3 columns
-    rows = [buttons[i:i + 3] for i in range(0, len(buttons), 3)]
+    # Arrange into rows of 2 columns
+    rows = [buttons[i:i + 2] for i in range(0, len(buttons), 2)]
     return InlineKeyboardMarkup(rows)
 
 
