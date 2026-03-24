@@ -72,15 +72,17 @@ async def _timeout_reminder(context):
 
 
 async def _lobby_reminder(context):
-    """Send a lobby closing warning."""
+    """Send a lobby closing warning with a Join button."""
     group_id, secs_left = context.job.data
     controller = context.bot_data.get(f"game_{group_id}")
     if not controller or controller.status != "pre_game_lobby":
         return
+    from commands.pre_game_actions import build_join_keyboard
     await context.bot.send_message(
         chat_id=group_id,
         text=get_message("lobby_closing", lang=controller.language, seconds=secs_left),
-        parse_mode="Markdown"
+        parse_mode="Markdown",
+        reply_markup=build_join_keyboard(controller)
     )
 
 
@@ -796,6 +798,9 @@ async def timeout_lobby(context):
     controller = context.bot_data.get(f"game_{group_id}")
     if not controller or controller.status != "pre_game_lobby":
         return
+
+    from commands.pre_game_actions import remove_lobby_join_button
+    await remove_lobby_join_button(context, controller)
 
     if controller.can_start():
         # Auto-start with first available variant
@@ -1873,6 +1878,8 @@ async def abort_game(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     cancel_timeout(context, controller.group_id)
+    from commands.pre_game_actions import remove_lobby_join_button
+    await remove_lobby_join_button(context, controller)
     await context.bot.send_message(
         chat_id=chat.id,
         text=msg("game_aborted", controller),
