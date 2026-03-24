@@ -21,7 +21,7 @@
 ## New Expansions / Game Modes
 
 - [ ] **Lady of the Sea** — Variant of Lady of the Lake. When investigating an evil player, the holder sees their **specific role** (not just alignment). When investigating a good player, only sees "good". Creates more information but also more bluffing opportunities. Implement as a new GameMode.
-- [ ] **Plot Cards** — Major expansion. At the start of each round, the leader draws plot cards and distributes them to other players:
+- [x] **Plot Cards** — Major expansion. At the start of each round, the leader draws plot cards and distributes them to other players:
   - 5-6 players: 1 card/round (7 cards in deck)
   - 7-8 players: 2 cards/round (15 cards)
   - 9-10 players: 3 cards/round (15 cards)
