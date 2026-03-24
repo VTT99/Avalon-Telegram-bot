@@ -1703,6 +1703,7 @@ ROLE_EMOJIS = {
     "Merlin":         "😇🧙",
     "Percival":       "😇🛡️",
     "LoyalServant":   "😇👼",
+    "Guinevere":      "😇👑",
     "Assassin":       "😈🗡️",
     "Mordred":        "😈🎭",
     "Morgana":        "😈🔮",
@@ -1711,6 +1712,23 @@ ROLE_EMOJIS = {
     "Lancelot_Good":  "😇⚔️",
     "Lancelot_Evil":  "😈⚔️",
 }
+
+ROLE_SIDE_LABELS = {
+    "good": "Good",
+    "evil": "Evil",
+}
+
+ROLE_SIDE_LABELS_ZH = {
+    "good": "正義",
+    "evil": "邪惡",
+}
+
+
+def _get_side_label(alignment: str, lang: str | None) -> str:
+    """Return the localised alignment label for a role."""
+    if lang == "zh-TW":
+        return ROLE_SIDE_LABELS_ZH.get(alignment, alignment)
+    return ROLE_SIDE_LABELS.get(alignment, alignment)
 
 
 def _build_role_info_keyboard(lang: str | None) -> InlineKeyboardMarkup:
@@ -1749,7 +1767,6 @@ async def roles_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=keyboard,
             parse_mode="Markdown",
         )
-        # If the command was issued in a group, confirm the DM was sent
         if chat_type in ("group", "supergroup"):
             await update.message.reply_text(
                 get_message("roles_guide_dm_sent", lang=lang)
@@ -1768,7 +1785,6 @@ async def handle_role_info_callback(update: Update, context: ContextTypes.DEFAUL
 
     _, role_name = query.data.split("|", 1)
 
-    # Detect language: try to find the user's active game, fall back to context
     user_id = query.from_user.id
     controller = find_game_for_player(context, user_id)
     lang = controller.language if controller else _lang_from_context(context)
@@ -1781,10 +1797,9 @@ async def handle_role_info_callback(update: Update, context: ContextTypes.DEFAUL
     alignment = info["alignment"]
     emoji = ROLE_EMOJIS.get(role_name, "❓")
     display = get_role_display_name(role_name, lang)
-    desc = get_message(f"role_desc_{role_name}", lang=lang)
-    side = get_message("side_good", lang=lang) if alignment == "good" else get_message("side_evil", lang=lang)
+    desc = info["description"]
+    side = _get_side_label(alignment, lang)
 
-    # Build detail text with description
     text = get_message("roles_guide_detail", lang=lang, emoji=emoji, name=display, side=side, desc=desc)
 
     # Append gameplay tip if available
