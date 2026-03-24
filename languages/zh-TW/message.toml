@@ -109,6 +109,7 @@ roles_hidden = "🙈 **本局角色配置已隱藏。**"
 
 # 模式警告
 lady_low_player_warning = "⚠️ **湖中女神**設計為7人以上遊戲（目前有{count}人）。是否仍要繼續？"
+balance_warning = "⚠️ **角色配置不平衡**：{good} 善良 / {evil} 邪惡（{players} 人標準為 {std_good} 善良 / {std_evil} 邪惡）。是否仍要繼續？"
 confirm_start_anyway = "▶️ 繼續開始"
 cancel_start = "❌ 取消"
 start_cancelled = "開始已取消。"
