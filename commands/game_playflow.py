@@ -991,22 +991,9 @@ async def handle_plot_card_use(update: Update, context: ContextTypes.DEFAULT_TYP
             player_cards.append(card_id)
 
     elif card_id == "we_found_you":
-        # Force another player to play with open loyalty
-        # Pick a target (for simplicity, target the next player)
-        player_ids = list(controller.players.keys())
-        targets = [uid for uid in player_ids if uid != user_id]
-        if targets:
-            target_uid = targets[0]
-            target_name = controller.players.get(target_uid, "?")
-            target_alignment = "evil" if state.is_evil(target_uid) else "good"
-            alignment_display = msg("side_evil", controller) if target_alignment == "evil" else msg("side_good", controller)
-
-            await context.bot.send_message(
-                chat_id=group_id,
-                text=msg("plot_we_found_you_result", controller,
-                         player=player_name, target=target_name, side=alignment_display),
-                parse_mode="Markdown"
-            )
+        # This card requires a target — should be played via plotuse_t callback
+        # which is provided by send_plot_card_play_prompt. Return the card.
+        player_cards.append(card_id)
 
 
 async def handle_plot_card_use_target(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1060,7 +1047,11 @@ async def send_plot_card_play_prompt(context, controller, user_id):
     player_cards = hands.get(user_id, [])
 
     from game.game_modes import _get_card_def
-    usable_cards = [c for c in player_cards if _get_card_def(c) and _get_card_def(c)["type"] == "usable"]
+    usable_cards = []
+    for c in player_cards:
+        cdef = _get_card_def(c)
+        if cdef and cdef["type"] == "usable":
+            usable_cards.append(c)
 
     if not usable_cards:
         return
