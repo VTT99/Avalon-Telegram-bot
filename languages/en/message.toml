@@ -106,7 +106,10 @@ hide_roles_gm_warning = "⚠️ Warning: You are a player in this game. Hiding r
 roles_hidden = "🙈 **Role composition is hidden for this game.**"
 
 # Mode warnings
-lady_low_player_warning = "⚠️ **Lady of the Lake** is designed for 7+ players (you have {count}). Continue anyway?"
+lady_low_player_warning = "⚠️ **Lady of the Lake** is designed for {min}+ players (you have {count}). Continue anyway?"
+lancelot_low_player_warning = "⚠️ **Lancelot** requires {min}+ players (you have {count}). Continue anyway?"
+excalibur_low_player_warning = "⚠️ **Excalibur** requires {min}+ players (you have {count}). Continue anyway?"
+mode_enabled_low_player_warning = "⚠️ **{mode}** requires {min}+ players (you currently have {count}). You can still enable it, but the game won't start until enough players join."
 confirm_start_anyway = "▶️ Start anyway"
 cancel_start = "❌ Cancel"
 start_cancelled = "Start cancelled."

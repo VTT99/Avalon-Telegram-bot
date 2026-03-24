@@ -15,6 +15,7 @@ MODE_METADATA: dict = toml.load(str(_CONF_PATH))
 class GameMode:
     """Base class for game modes."""
     name: str = ""
+    min_players: int = 0
 
     def modify_roles(self, roles: list[str], player_count: int) -> list[str]:
         """Optionally modify the role list before assignment."""
@@ -33,6 +34,7 @@ class GameMode:
 
 class LadyOfTheLake(GameMode):
     name = "lady_of_the_lake"
+    min_players = 7
 
     def on_game_start(self, state) -> None:
         # Lady starts with the player to the right of the first leader
@@ -49,6 +51,7 @@ class LadyOfTheLake(GameMode):
 
 class Lancelot(GameMode):
     name = "lancelot"
+    min_players = 5
 
     def modify_roles(self, roles: list[str], player_count: int) -> list[str]:
         """Add Lancelot_Good, Lancelot_Evil, and Guinevere (7+ players).
@@ -100,6 +103,7 @@ class Lancelot(GameMode):
 
 class Excalibur(GameMode):
     name = "excalibur"
+    min_players = 5
 
     def on_mission_end(self, state, mission_number: int) -> str | None:
         # Excalibur activates BEFORE mission result is revealed
@@ -118,6 +122,14 @@ MODE_CLASSES: dict[str, type[GameMode]] = {
 
 def get_available_modes() -> list[str]:
     return list(MODE_CLASSES.keys())
+
+
+def get_mode_min_players(mode_name: str) -> int:
+    """Return the minimum player count required for the given mode."""
+    cls = MODE_CLASSES.get(mode_name)
+    if cls is None:
+        return 0
+    return cls.min_players
 
 
 def create_mode(mode_name: str) -> GameMode:

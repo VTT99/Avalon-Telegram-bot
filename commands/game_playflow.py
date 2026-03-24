@@ -313,6 +313,22 @@ async def handle_mode_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         await query.edit_message_reply_markup(reply_markup=keyboard)
     except Exception:
         pass
+
+    if enabled:
+        from game.game_modes import get_mode_min_players
+        min_players = get_mode_min_players(mode_name)
+        player_count = len(controller.players)
+        if min_players > 0 and player_count < min_players:
+            warning = get_message(
+                "mode_enabled_low_player_warning",
+                lang=controller.language,
+                mode=get_message(f"mode_name_{mode_name}", lang=controller.language),
+                min=min_players,
+                count=player_count,
+            )
+            await query.answer(warning, show_alert=True)
+            return
+
     status = "enabled" if enabled else "disabled"
     await query.answer(f"{mode_name} {status}")
 

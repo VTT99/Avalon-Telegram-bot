@@ -286,11 +286,19 @@ async def handle_custom_role_action(update: Update, context: ContextTypes.DEFAUL
 
 async def _check_mode_warnings(context, controller, group_id):
     """Check for mode/player count warnings. Returns True if we need to wait for confirmation."""
+    from game.game_modes import get_mode_min_players
     player_count = len(controller.players)
     warnings = []
 
-    if "lady_of_the_lake" in controller.enabled_modes and player_count < 7:
-        warnings.append(_msg(controller, "lady_low_player_warning", count=player_count))
+    for mode_name in controller.enabled_modes:
+        min_players = get_mode_min_players(mode_name)
+        if min_players > 0 and player_count < min_players:
+            warnings.append(_msg(
+                controller,
+                f"{mode_name}_low_player_warning",
+                count=player_count,
+                min=min_players,
+            ))
 
     if not warnings:
         return False
