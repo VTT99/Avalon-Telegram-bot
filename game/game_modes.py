@@ -51,11 +51,38 @@ class Lancelot(GameMode):
     name = "lancelot"
 
     def modify_roles(self, roles: list[str], player_count: int) -> list[str]:
-        """Replace one LoyalServant with Lancelot_Good and one Minion with Lancelot_Evil."""
+        """Add Lancelot_Good, Lancelot_Evil, and Guinevere (7+ players).
+        Replaces: LoyalServant→Lancelot_Good, generic evil→Lancelot_Evil,
+        and (if 7+) another LoyalServant→Guinevere.
+        """
         new_roles = list(roles)
-        if "LoyalServant" in new_roles and "Minion" in new_roles:
+
+        # Replace one LoyalServant with Lancelot_Good
+        if "LoyalServant" in new_roles:
             new_roles[new_roles.index("LoyalServant")] = "Lancelot_Good"
-            new_roles[new_roles.index("Minion")] = "Lancelot_Evil"
+        else:
+            return new_roles  # can't apply without a LoyalServant
+
+        # Replace one evil with Lancelot_Evil
+        # Priority: Minion > Oberon > Morgana > any duplicate evil
+        from game.roles import is_evil
+        replaced_evil = False
+        for evil_target in ("Minion", "Oberon", "Morgana"):
+            if evil_target in new_roles:
+                new_roles[new_roles.index(evil_target)] = "Lancelot_Evil"
+                replaced_evil = True
+                break
+        if not replaced_evil:
+            for i, r in enumerate(new_roles):
+                if is_evil(r) and r != "Assassin":
+                    new_roles[i] = "Lancelot_Evil"
+                    replaced_evil = True
+                    break
+
+        # Add Guinevere for 7+ players (replaces another LoyalServant)
+        if player_count >= 7 and "LoyalServant" in new_roles:
+            new_roles[new_roles.index("LoyalServant")] = "Guinevere"
+
         return new_roles
 
     def on_game_start(self, state) -> None:

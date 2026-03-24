@@ -9,7 +9,10 @@ from dotenv import load_dotenv
 from telegram import BotCommand, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from telegram.ext import PicklePersistence
-from commands.game_admin import new_game, start_game, start_custom, handle_variant_callback, handle_custom_role_action
+from commands.game_admin import (
+    new_game, start_game, start_custom, handle_variant_callback,
+    handle_custom_role_action, handle_confirm_start, handle_cancel_start,
+)
 from commands.pre_game_actions import join, leave, kick, handle_kick_callback
 from commands.language import language, set_language_callback
 from commands.game_playflow import (
@@ -99,6 +102,8 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_variant_callback, pattern=r"^variant_-?\d+_\d+$"))
     app.add_handler(CallbackQueryHandler(handle_custom_role_action, pattern=r"^cr\|"))
     app.add_handler(CallbackQueryHandler(handle_kick_callback, pattern=r"^kick\|"))
+    app.add_handler(CallbackQueryHandler(handle_confirm_start, pattern=r"^confirmstart\|"))
+    app.add_handler(CallbackQueryHandler(handle_cancel_start, pattern=r"^cancelstart\|"))
 
     # Config callbacks
     app.add_handler(CallbackQueryHandler(handle_config_stage, pattern=r"^cfg\|"))

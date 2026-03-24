@@ -100,6 +100,16 @@ custom_roles_header = "**Custom Roles** ({current}/{total})\nAdd/remove roles wi
 custom_roles_confirm = "✅ Confirm & Start"
 custom_roles_full = "Role list is full."
 custom_roles_count_mismatch = "Role count doesn't match player count."
+custom_show_roles = "Roles visible to group"
+custom_hide_roles = "Roles hidden from group"
+hide_roles_gm_warning = "⚠️ Warning: You are a player in this game. Hiding roles gives you an unfair advantage since you chose them!"
+roles_hidden = "🙈 **Role composition is hidden for this game.**"
+
+# Mode warnings
+lady_low_player_warning = "⚠️ **Lady of the Lake** is designed for 7+ players (you have {count}). Continue anyway?"
+confirm_start_anyway = "▶️ Start anyway"
+cancel_start = "❌ Cancel"
+start_cancelled = "Start cancelled."
 
 # Team selection
 team_select_header = "📋 **Mission {mission}** | {tracker}\n👑 Leader: **{leader}**\nSelect **{size}** players for the team:"
@@ -172,6 +182,7 @@ role_name_Mordred = "Mordred"
 role_name_Morgana = "Morgana"
 role_name_Oberon = "Oberon"
 role_name_Minion = "Minion"
+role_name_Guinevere = "Guinevere"
 role_name_Lancelot_Good = "Lancelot (Good)"
 role_name_Lancelot_Evil = "Lancelot (Evil)"
 
@@ -189,6 +200,9 @@ role_desc_Mordred = "Hidden from Merlin"
 role_desc_Morgana = "Appears as Merlin to Percival"
 role_desc_Oberon = "Hidden from fellow evil, cannot see them"
 role_desc_Minion = "A minion of Mordred"
+role_desc_Guinevere = "Sees both Lancelots (doesn't know which is good/evil)"
+guinevere_sees = "Lancelots (you don't know their loyalty): {targets}"
+role_tip_Guinevere = "💡 You can see both Lancelots but don't know which is good and which is evil. Use this to guide your team and figure out who to trust as loyalties may switch!"
 role_desc_Lancelot_Good = "A noble knight whose loyalty may waver"
 role_desc_Lancelot_Evil = "A corrupted knight whose loyalty may waver"
 

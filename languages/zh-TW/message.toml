@@ -100,6 +100,16 @@ custom_roles_header = "**自訂角色** ({current}/{total})\n使用 ➕/➖ 增�
 custom_roles_confirm = "✅ 確認並開始"
 custom_roles_full = "角色數量已滿。"
 custom_roles_count_mismatch = "角色數量與玩家數量不符。"
+custom_show_roles = "角色對群組可見"
+custom_hide_roles = "角色對群組隱藏"
+hide_roles_gm_warning = "⚠️ 警告：你是這場遊戲的玩家。隱藏角色會給你不公平的優勢，因為你選擇了角色！"
+roles_hidden = "🙈 **本局角色配置已隱藏。**"
+
+# 模式警告
+lady_low_player_warning = "⚠️ **湖中女神**設計為7人以上遊戲（目前有{count}人）。是否仍要繼續？"
+confirm_start_anyway = "▶️ 繼續開始"
+cancel_start = "❌ 取消"
+start_cancelled = "開始已取消。"
 
 # 隊伍選擇
 team_select_header = "📋 **任務 {mission}** | {tracker}\n👑 隊長：**{leader}**\n選擇 **{size}** 位玩家組成隊伍："
@@ -172,6 +182,7 @@ role_name_Mordred = "莫德雷德"
 role_name_Morgana = "莫甘娜"
 role_name_Oberon = "奧伯倫"
 role_name_Minion = "爪牙"
+role_name_Guinevere = "乖妮薇兒"
 role_name_Lancelot_Good = "蘭斯洛特（正義）"
 role_name_Lancelot_Evil = "蘭斯洛特（邪惡）"
 
@@ -189,6 +200,9 @@ role_desc_Mordred = "梅林看不到"
 role_desc_Morgana = "在派西維爾眼中看起來像梅林"
 role_desc_Oberon = "對邪惡夥伴隱藏，也看不到他們"
 role_desc_Minion = "莫德雷德的爪牙"
+role_desc_Guinevere = "看到兩位蘭斯洛特（不知道誰是正義誰是邪惡）"
+guinevere_sees = "蘭斯洛特們（你不知道他們的忠誠）：{targets}"
+role_tip_Guinevere = "💡 你能看到兩位蘭斯洛特，但不知道誰是正義誰是邪惡。利用這些資訊引導隊伍，注意忠誠可能會切換！"
 role_desc_Lancelot_Good = "忠誠可能動搖的高貴騎士"
 role_desc_Lancelot_Evil = "忠誠可能動搖的墮落騎士"
 

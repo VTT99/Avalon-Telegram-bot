@@ -820,20 +820,27 @@ async def timeout_lobby(context):
 
 async def begin_playflow(context: ContextTypes.DEFAULT_TYPE, controller):
     """Called after start_game() succeeds. DMs roles then starts team selection."""
-    # Announce which roles are in the game (official rule: players know the role list)
+    # Announce which roles are in the game (unless GM chose to hide)
     lang = controller.language
-    role_counts = {}
-    for r in controller.state.roles:
-        role_counts[r] = role_counts.get(r, 0) + 1
-    role_list = ", ".join(
-        f"{count}x {get_role_display_name(name, lang)}" if count > 1 else get_role_display_name(name, lang)
-        for name, count in role_counts.items()
-    )
-    await context.bot.send_message(
-        chat_id=controller.group_id,
-        text=msg("roles_in_game", controller, roles=role_list),
-        parse_mode="Markdown"
-    )
+    if controller.show_roles_in_group:
+        role_counts = {}
+        for r in controller.state.roles:
+            role_counts[r] = role_counts.get(r, 0) + 1
+        role_list = ", ".join(
+            f"{count}x {get_role_display_name(name, lang)}" if count > 1 else get_role_display_name(name, lang)
+            for name, count in role_counts.items()
+        )
+        await context.bot.send_message(
+            chat_id=controller.group_id,
+            text=msg("roles_in_game", controller, roles=role_list),
+            parse_mode="Markdown"
+        )
+    else:
+        await context.bot.send_message(
+            chat_id=controller.group_id,
+            text=msg("roles_hidden", controller),
+            parse_mode="Markdown"
+        )
 
     await dm_assign_roles(context, controller)
     await context.bot.send_message(
