@@ -3,6 +3,10 @@
 alignment = "good"
 description = "Knows evil players (except Mordred)"
 
+[MerlinPure]
+alignment = "good"
+description = "Sees ALL evil players including Mordred; if assassinated, evil wins"
+
 [Percival]
 alignment = "good"
 description = "Sees Merlin and Morgana (but can't tell which)"
