@@ -879,7 +879,8 @@ def build_role_message(controller, user_id):
     if not tip.startswith("["):
         lines.append(tip)
 
-    vision = get_vision(role, state.player_roles, user_id)
+    vision = get_vision(role, state.player_roles, user_id,
+                        first_leader_uid=state.get_current_leader())
     if vision["sees"] and vision["message_key"]:
         names = [controller.players[uid] for uid in vision["sees"]]
         lines.append(get_message(vision["message_key"], lang=lang,
@@ -1698,6 +1699,7 @@ ROLE_EMOJIS = {
     "Merlin":         "😇🧙",
     "Percival":       "😇🛡️",
     "LoyalServant":   "😇👼",
+    "Cleric":         "😇✨",
     "Assassin":       "😈🗡️",
     "Mordred":        "😈🎭",
     "Morgana":        "😈🔮",

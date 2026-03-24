@@ -44,7 +44,8 @@ def good_role_names() -> set[str]:
     return {name for name, cfg in ROLE_REGISTRY.items() if cfg["alignment"] == "good"}
 
 
-def get_vision(observer_role: str, all_player_roles: dict[int, str], observer_uid: int) -> dict:
+def get_vision(observer_role: str, all_player_roles: dict[int, str], observer_uid: int,
+               first_leader_uid: int | None = None) -> dict:
     """
     Compute what an observer sees given all player-role assignments.
 
@@ -76,6 +77,14 @@ def get_vision(observer_role: str, all_player_roles: dict[int, str], observer_ui
                           if role in ("Lancelot_Good", "Lancelot_Evil") and uid != observer_uid]
         if result["sees"]:
             result["message_key"] = "guinevere_sees"
+
+    elif observer_role == "Cleric":
+        # Learns the alignment of the first leader
+        if first_leader_uid is not None and first_leader_uid in all_player_roles:
+            leader_role = all_player_roles[first_leader_uid]
+            leader_alignment = get_alignment(leader_role)
+            result["sees"] = [first_leader_uid]
+            result["message_key"] = "cleric_sees_good" if leader_alignment == "good" else "cleric_sees_evil"
 
     elif is_evil(observer_role) and observer_role != "Oberon":
         # Sees fellow evil (except Oberon and self)
