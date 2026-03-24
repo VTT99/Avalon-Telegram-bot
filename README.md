@@ -4,6 +4,10 @@
 
 A **free, open-source, self-hosted** Telegram bot for playing [The Resistance: Avalon](https://indieboardsandcards.com/index.php/our-games/the-resistance-avalon/) in group chats. Fully customizable — configure roles, game modes, timeouts, and language to fit your group's play style.
 
+## Try It Out
+
+Want to try the bot without setting up your own? You can use the public instance hosted by me: [@Avalon25_bot](https://t.me/Avalon25_bot)
+
 ## Why Self-Host?
 
 - **Free forever** — no subscriptions, no ads, no data collection
