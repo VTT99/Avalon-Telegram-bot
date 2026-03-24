@@ -9,7 +9,10 @@ from dotenv import load_dotenv
 from telegram import BotCommand, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 from telegram.ext import PicklePersistence
-from commands.game_admin import new_game, start_game, start_custom, handle_variant_callback, handle_custom_role_action
+from commands.game_admin import (
+    new_game, start_game, start_custom, handle_variant_callback,
+    handle_custom_role_action, handle_confirm_start, handle_cancel_start,
+)
 from commands.pre_game_actions import join, leave, kick, handle_kick_callback, handle_join_callback
 from commands.language import language, set_language_callback
 from commands.game_playflow import (
@@ -30,6 +33,7 @@ from commands.game_playflow import (
     handle_excalibur,
     handle_skip_discussion,
     roles_command,
+    handle_role_info_callback,
     stats_command,
     my_role,
     start_command,
@@ -99,6 +103,8 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_custom_role_action, pattern=r"^cr\|"))
     app.add_handler(CallbackQueryHandler(handle_kick_callback, pattern=r"^kick\|"))
     app.add_handler(CallbackQueryHandler(handle_join_callback, pattern=r"^join\|"))
+    app.add_handler(CallbackQueryHandler(handle_confirm_start, pattern=r"^confirmstart\|"))
+    app.add_handler(CallbackQueryHandler(handle_cancel_start, pattern=r"^cancelstart\|"))
 
     # Config callbacks
     app.add_handler(CallbackQueryHandler(handle_config_stage, pattern=r"^cfg\|"))
@@ -120,6 +126,7 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_team_vote, pattern=r"^teamvote_-?\d+_(approve|reject)$"))
     app.add_handler(CallbackQueryHandler(handle_mission_vote, pattern=r"^missionvote_-?\d+_(success|fail)$"))
     app.add_handler(CallbackQueryHandler(handle_assassin_guess, pattern=r"^assassin_-?\d+_\d+$"))
+    app.add_handler(CallbackQueryHandler(handle_role_info_callback, pattern=r"^roleinfo\|"))
 
     print("Bot is running...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)

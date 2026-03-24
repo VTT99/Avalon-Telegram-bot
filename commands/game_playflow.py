@@ -2,8 +2,9 @@
 
 import random as _random
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.error import Forbidden, BadRequest
 from telegram.ext import ContextTypes
-from game.roles import is_evil as is_evil_role, get_vision, evil_role_names, get_role_display_name
+from game.roles import is_evil as is_evil_role, get_vision, evil_role_names, get_role_display_name, get_alignment
 from utils.language import get_message, get_button_text
 
 SPEED_PRESETS = {
@@ -824,20 +825,27 @@ async def timeout_lobby(context):
 
 async def begin_playflow(context: ContextTypes.DEFAULT_TYPE, controller):
     """Called after start_game() succeeds. DMs roles then starts team selection."""
-    # Announce which roles are in the game (official rule: players know the role list)
+    # Announce which roles are in the game (unless GM chose to hide)
     lang = controller.language
-    role_counts = {}
-    for r in controller.state.roles:
-        role_counts[r] = role_counts.get(r, 0) + 1
-    role_list = ", ".join(
-        f"{count}x {get_role_display_name(name, lang)}" if count > 1 else get_role_display_name(name, lang)
-        for name, count in role_counts.items()
-    )
-    await context.bot.send_message(
-        chat_id=controller.group_id,
-        text=msg("roles_in_game", controller, roles=role_list),
-        parse_mode="Markdown"
-    )
+    if controller.show_roles_in_group:
+        role_counts = {}
+        for r in controller.state.roles:
+            role_counts[r] = role_counts.get(r, 0) + 1
+        role_list = ", ".join(
+            f"{count}x {get_role_display_name(name, lang)}" if count > 1 else get_role_display_name(name, lang)
+            for name, count in role_counts.items()
+        )
+        await context.bot.send_message(
+            chat_id=controller.group_id,
+            text=msg("roles_in_game", controller, roles=role_list),
+            parse_mode="Markdown"
+        )
+    else:
+        await context.bot.send_message(
+            chat_id=controller.group_id,
+            text=msg("roles_hidden", controller),
+            parse_mode="Markdown"
+        )
 
     await dm_assign_roles(context, controller)
     await context.bot.send_message(
@@ -865,7 +873,16 @@ def build_role_message(controller, user_id):
     lang = controller.language
     role = state.get_role(user_id)
     display_role = get_role_display_name(role, lang)
-    lines = [get_message("your_role", lang=lang, role=display_role)]
+    alignment = get_alignment(role)
+    side_emoji = "😇" if alignment == "good" else "😈"
+    side_name = get_message("side_good", lang=lang) if alignment == "good" else get_message("side_evil", lang=lang)
+
+    lines = [get_message("your_role", lang=lang, role=display_role, side_emoji=side_emoji)]
+    lines.append(get_message("your_role_side", lang=lang, side_emoji=side_emoji, side=side_name))
+
+    tip = get_message(f"role_tip_{role}", lang=lang)
+    if not tip.startswith("["):
+        lines.append(tip)
 
     vision = get_vision(role, state.player_roles, user_id)
     if vision["sees"] and vision["message_key"]:
@@ -1672,22 +1689,111 @@ async def handle_assassin_guess(update: Update, context: ContextTypes.DEFAULT_TY
 
 # --- Role descriptions ---
 
+def _lang_from_context(context):
+    """Resolve language from telegram context (group > user > default)."""
+    if hasattr(context, "chat_data") and context.chat_data and "lang" in context.chat_data:
+        return context.chat_data["lang"]
+    if hasattr(context, "user_data") and context.user_data:
+        return context.user_data.get("lang")
+    return None
+
+
+# Emoji per role (alignment emoji + role-specific emoji)
+ROLE_EMOJIS = {
+    "Merlin":         "😇🧙",
+    "Percival":       "😇🛡️",
+    "LoyalServant":   "😇👼",
+    "Assassin":       "😈🗡️",
+    "Mordred":        "😈🎭",
+    "Morgana":        "😈🔮",
+    "Oberon":         "😈👻",
+    "Minion":         "😈💀",
+    "Lancelot_Good":  "😇⚔️",
+    "Lancelot_Evil":  "😈⚔️",
+}
+
+
+def _build_role_info_keyboard(lang: str | None) -> InlineKeyboardMarkup:
+    """Build a 2-column inline keyboard with one button per role."""
+    from game.roles import ROLE_REGISTRY
+    buttons = []
+    for role_name in ROLE_REGISTRY:
+        emoji = ROLE_EMOJIS.get(role_name, "❓")
+        display = get_role_display_name(role_name, lang)
+        buttons.append(
+            InlineKeyboardButton(
+                f"{emoji} {display}",
+                callback_data=f"roleinfo|{role_name}",
+            )
+        )
+    # Arrange into rows of 2 columns
+    rows = [buttons[i:i + 2] for i in range(0, len(buttons), 2)]
+    return InlineKeyboardMarkup(rows)
+
+
 async def roles_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/roles — list all roles and their descriptions."""
-    # Use game language if in a game, else context language
+    """/roles — send a DM with interactive role-info buttons."""
     controller = _get_controller_from_update(update, context)
-    lang = controller.language if controller else None
+    lang = controller.language if controller else _lang_from_context(context)
+
+    keyboard = _build_role_info_keyboard(lang)
+    header = get_message("roles_guide_header", lang=lang)
+
+    user_id = update.effective_user.id
+    chat_type = update.effective_chat.type
+
+    try:
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=header,
+            reply_markup=keyboard,
+            parse_mode="Markdown",
+        )
+        # If the command was issued in a group, confirm the DM was sent
+        if chat_type in ("group", "supergroup"):
+            await update.message.reply_text(
+                get_message("roles_guide_dm_sent", lang=lang)
+            )
+    except (Forbidden, BadRequest):
+        bot_username = (await context.bot.get_me()).username
+        await update.message.reply_text(
+            get_message("roles_guide_dm_failed", lang=lang, bot_username=bot_username)
+        )
+
+
+async def handle_role_info_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Callback: show the description and tip of a role when its button is tapped."""
+    query = update.callback_query
+    await query.answer()
+
+    _, role_name = query.data.split("|", 1)
+
+    # Detect language: try to find the user's active game, fall back to context
+    user_id = query.from_user.id
+    controller = find_game_for_player(context, user_id)
+    lang = controller.language if controller else _lang_from_context(context)
 
     from game.roles import ROLE_REGISTRY
-    lines = [get_message("roles_list_header", lang=lang)]
-    for role_name, info in ROLE_REGISTRY.items():
-        alignment = info["alignment"]
-        side = "😇" if alignment == "good" else "😈"
-        desc = get_message(f"role_desc_{role_name}", lang=lang)
-        display = get_role_display_name(role_name, lang)
-        lines.append(f"  {side} **{display}** — {desc}")
+    info = ROLE_REGISTRY.get(role_name)
+    if not info:
+        return
 
-    await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
+    alignment = info["alignment"]
+    emoji = ROLE_EMOJIS.get(role_name, "❓")
+    display = get_role_display_name(role_name, lang)
+    desc = get_message(f"role_desc_{role_name}", lang=lang)
+    side = get_message("side_good", lang=lang) if alignment == "good" else get_message("side_evil", lang=lang)
+
+    # Build detail text with description
+    text = get_message("roles_guide_detail", lang=lang, emoji=emoji, name=display, side=side, desc=desc)
+
+    # Append gameplay tip if available
+    tip = get_message(f"role_tip_{role_name}", lang=lang)
+    if not tip.startswith("["):
+        text += f"\n\n{tip}"
+
+    keyboard = _build_role_info_keyboard(lang)
+    await query.edit_message_text(text, reply_markup=keyboard, parse_mode="Markdown")
 
 
 # --- In-game history commands ---

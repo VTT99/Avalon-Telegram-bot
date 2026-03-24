@@ -43,6 +43,7 @@ class Controller:
         self.mission_votes: dict[int, bool] = {}
         self.assassin_guess_message_id: int | None = None
         self.vote_history: list[dict] = []
+        self.show_roles_in_group: bool = True  # whether to announce role list at game start
 
     def add_player(self, user_id, name):
         if self.status != "pre_game_lobby":
