@@ -106,13 +106,15 @@ class LadyOfTheSea(GameMode):
     name = "lady_of_the_sea"
 
     def on_game_start(self, state) -> None:
-        # Same setup as Lady of the Lake
+        """Initialize investigation state: set holder to the player before the leader
+        and create an empty set to track investigated players."""
         player_ids = list(state.players.keys())
         lady_index = (state.current_leader_index - 1) % len(player_ids)
         state.mode_data["lady_holder"] = player_ids[lady_index]
         state.mode_data["investigated"] = set()
 
     def on_mission_end(self, state, mission_number: int) -> str | None:
+        """Inject an 'investigate' phase after missions 2, 3, and 4."""
         if mission_number in (2, 3, 4):
             return "investigate"
         return None
