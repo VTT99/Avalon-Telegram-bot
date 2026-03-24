@@ -85,7 +85,8 @@ mode_name_lancelot = "Lancelot"
 # Role assignment
 roles_in_game = "**Roles in this game:** {roles}"
 roles_assigned = "Roles assigned! Check your DMs."
-your_role = "Your role: **{role}**"
+your_role = "Your role: {side_emoji} **{role}**"
+your_role_side = "You are on the side of {side_emoji} **{side}**."
 merlin_sees = "Evil players visible to you: {evil_players}"
 percival_sees = "Merlin or Morgana (you don't know which): {targets}"
 evil_sees = "Fellow evil players: {evil_players}"
@@ -186,6 +187,18 @@ role_desc_Oberon = "Hidden from fellow evil, cannot see them"
 role_desc_Minion = "A minion of Mordred"
 role_desc_Lancelot_Good = "A noble knight whose loyalty may waver"
 role_desc_Lancelot_Evil = "A corrupted knight whose loyalty may waver"
+
+# Role gameplay tips (shown in DM after role assignment)
+role_tip_Merlin = "💡 You can see the evil players (except Mordred). Lead the good team to victory — but be subtle! If the Assassin discovers you're Merlin, they can assassinate you and win the game."
+role_tip_Percival = "💡 You can see who Merlin and Morgana are, but you don't know which is which. Use this information to protect Merlin and guide your team."
+role_tip_LoyalServant = "💡 You have no special abilities. Pay attention to discussions and voting patterns to figure out who is good and who is evil."
+role_tip_Assassin = "💡 You know who the other evil players are. If the good team wins 3 missions, you get one chance to guess who Merlin is — guess correctly and evil wins!"
+role_tip_Mordred = "💡 You know who the other evil players are, and Merlin cannot see you. Use this advantage to sabotage missions without suspicion."
+role_tip_Morgana = "💡 You appear as Merlin to Percival, creating confusion. Use this to mislead the good team and protect the real evil players."
+role_tip_Oberon = "💡 You are evil but hidden from your fellow evil players — and you cannot see them either. Work alone to sabotage missions."
+role_tip_Minion = "💡 You know who the other evil players are. Work together to fail missions and protect your team's identity."
+role_tip_Lancelot_Good = "💡 You start on the good side, but your loyalty may switch during the game. Be prepared for your allegiance to change!"
+role_tip_Lancelot_Evil = "💡 You start on the evil side, but your loyalty may switch during the game. Be prepared for your allegiance to change!"
 
 # Turn notification
 turn_notification = "👑 **It's your turn!** Select {size} players for Mission {mission}."
