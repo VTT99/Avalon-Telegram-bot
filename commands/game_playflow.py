@@ -1677,6 +1677,15 @@ async def handle_assassin_guess(update: Update, context: ContextTypes.DEFAULT_TY
 
 # --- Role descriptions ---
 
+def _lang_from_context(context):
+    """Resolve language from telegram context (group > user > default)."""
+    if hasattr(context, "chat_data") and context.chat_data and "lang" in context.chat_data:
+        return context.chat_data["lang"]
+    if hasattr(context, "user_data") and context.user_data:
+        return context.user_data.get("lang")
+    return None
+
+
 # Emoji per role (alignment emoji + role-specific emoji)
 ROLE_EMOJIS = {
     "Merlin":         "😇🧙",
@@ -1713,7 +1722,7 @@ def _build_role_info_keyboard(lang: str | None) -> InlineKeyboardMarkup:
 async def roles_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/roles — send a DM with interactive role-info buttons."""
     controller = _get_controller_from_update(update, context)
-    lang = controller.language if controller else None
+    lang = controller.language if controller else _lang_from_context(context)
 
     keyboard = _build_role_info_keyboard(lang)
     header = get_message("roles_guide_header", lang=lang)
@@ -1747,12 +1756,10 @@ async def handle_role_info_callback(update: Update, context: ContextTypes.DEFAUL
 
     _, role_name = query.data.split("|", 1)
 
-    # Detect language: try to find the user's active game, fall back to None
-    lang = None
+    # Detect language: try to find the user's active game, fall back to context
     user_id = query.from_user.id
     controller = find_game_for_player(context, user_id)
-    if controller:
-        lang = controller.language
+    lang = controller.language if controller else _lang_from_context(context)
 
     from game.roles import ROLE_REGISTRY
     info = ROLE_REGISTRY.get(role_name)
