@@ -33,6 +33,10 @@ alignment = "evil"
 description = "A minion of Mordred"
 
 # Lancelot mode roles
+[Guinevere]
+alignment = "good"
+description = "Sees both Lancelots but doesn't know their loyalty"
+
 [Lancelot_Good]
 alignment = "good"
 description = "A noble knight whose loyalty may waver"

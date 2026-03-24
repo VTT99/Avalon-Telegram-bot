@@ -173,7 +173,7 @@ def _build_custom_roles_keyboard(controller):
     available_roles = list(ROLE_REGISTRY.keys())
     # If Lancelot mode not enabled, hide Lancelot roles
     if "lancelot" not in controller.enabled_modes:
-        available_roles = [r for r in available_roles if not r.startswith("Lancelot")]
+        available_roles = [r for r in available_roles if not r.startswith("Lancelot") and r != "Guinevere"]
 
     buttons = []
     for role_name in available_roles:
@@ -192,6 +192,14 @@ def _build_custom_roles_keyboard(controller):
             InlineKeyboardButton(f"➕", callback_data=f"cr|{controller.group_id}|add|{role_name}"),
         ]
         buttons.append(row)
+
+    # Show/hide roles toggle
+    show_icon = "👁️" if controller.show_roles_in_group else "🙈"
+    show_label = _msg(controller, "custom_show_roles") if controller.show_roles_in_group else _msg(controller, "custom_hide_roles")
+    buttons.append([InlineKeyboardButton(
+        f"{show_icon} {show_label}",
+        callback_data=f"cr|{controller.group_id}|toggleshow|0"
+    )])
 
     # Confirm button (only if count matches)
     total = len(custom)
@@ -240,6 +248,16 @@ async def handle_custom_role_action(update: Update, context: ContextTypes.DEFAUL
         desc = get_message(f"role_desc_{role_name}", lang=lang)
         await query.answer(desc, show_alert=True)
         return
+    elif action == "toggleshow":
+        controller.show_roles_in_group = not controller.show_roles_in_group
+        # Warn if GM is a player and hiding roles
+        if not controller.show_roles_in_group and controller.master_id in controller.players:
+            await query.answer(
+                get_message("hide_roles_gm_warning", lang=lang), show_alert=True
+            )
+        else:
+            await query.answer()
+        # Fall through to rebuild keyboard
     elif action == "confirm":
         if len(controller.custom_roles) != player_count:
             await query.answer(_msg(controller, "custom_roles_count_mismatch"))
@@ -266,8 +284,97 @@ async def handle_custom_role_action(update: Update, context: ContextTypes.DEFAUL
     await query.answer()
 
 
+async def _check_mode_warnings(context, controller, group_id):
+    """Check for mode/player count warnings. Returns True if we need to wait for confirmation."""
+    player_count = len(controller.players)
+    warnings = []
+
+    if "lady_of_the_lake" in controller.enabled_modes and player_count < 7:
+        warnings.append(_msg(controller, "lady_low_player_warning", count=player_count))
+
+    if not warnings:
+        return False
+
+    text = "\n".join(warnings)
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                _msg(controller, "confirm_start_anyway"),
+                callback_data=f"confirmstart|{group_id}"
+            ),
+            InlineKeyboardButton(
+                _msg(controller, "cancel_start"),
+                callback_data=f"cancelstart|{group_id}"
+            ),
+        ]
+    ])
+    await context.bot.send_message(
+        chat_id=group_id, text=text, reply_markup=keyboard, parse_mode="Markdown"
+    )
+    return True
+
+
+async def handle_confirm_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """GM confirms starting despite warnings."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+
+    controller = get_game(context, group_id)
+    if not controller or not controller.is_game_master(query.from_user.id):
+        await query.answer()
+        return
+
+    try:
+        await query.edit_message_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+    await query.answer()
+
+    # Check what was pending
+    if hasattr(controller, '_pending_start'):
+        kind, arg = controller._pending_start
+        del controller._pending_start
+        if kind == "preset":
+            await _do_start_now(context, controller, group_id, arg)
+        elif kind == "custom":
+            await _do_start_custom_now(context, controller, group_id)
+    else:
+        await _do_start_now(context, controller, group_id, 0)
+
+
+async def handle_cancel_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """GM cancels start after warning."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+
+    controller = get_game(context, group_id)
+    if not controller or not controller.is_game_master(query.from_user.id):
+        await query.answer()
+        return
+
+    if hasattr(controller, '_pending_start'):
+        del controller._pending_start
+
+    try:
+        await query.edit_message_text(_msg(controller, "start_cancelled"))
+    except Exception:
+        pass
+    await query.answer()
+
+
 async def _do_start(context, controller, group_id, variant_index):
-    cancel_timeout(context, group_id)  # cancel lobby timeout
+    """Start with warning check."""
+    controller._pending_start = ("preset", variant_index)
+    if await _check_mode_warnings(context, controller, group_id):
+        return  # waiting for confirmation
+    del controller._pending_start
+    await _do_start_now(context, controller, group_id, variant_index)
+
+
+async def _do_start_now(context, controller, group_id, variant_index):
+    cancel_timeout(context, group_id)
     success, error_key = controller.start_game(variant_index)
     if success:
         await context.bot.send_message(
@@ -281,7 +388,15 @@ async def _do_start(context, controller, group_id, variant_index):
 
 
 async def _do_start_custom(context, controller, group_id):
-    """Start game with custom roles chosen by GM."""
+    """Start custom with warning check."""
+    controller._pending_start = ("custom", None)
+    if await _check_mode_warnings(context, controller, group_id):
+        return
+    del controller._pending_start
+    await _do_start_custom_now(context, controller, group_id)
+
+
+async def _do_start_custom_now(context, controller, group_id):
     cancel_timeout(context, group_id)
     success, error_key = controller.start_game_custom(controller.custom_roles)
     if success:
