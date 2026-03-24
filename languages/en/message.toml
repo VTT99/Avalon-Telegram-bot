@@ -238,3 +238,12 @@ mode_name_excalibur = "Excalibur"
 # Statistics
 stats_header = "**Leaderboard:**"
 no_stats = "No games played yet in this group."
+
+# Spectator mode
+spectator_game_not_started = "A game hasn't started yet. Wait for the game to begin, then use /watch."
+spectator_added = "👁️ {name} is now spectating! ({count} spectator(s) watching)"
+already_spectating = "You are already spectating this game."
+spectator_is_player = "You are a player in this game and cannot spectate."
+spectator_removed = "👁️ {name} is no longer spectating."
+not_spectating = "You are not spectating this game."
+spectators_watching = "👁️ {count} spectator(s) watching"

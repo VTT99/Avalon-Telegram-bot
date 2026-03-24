@@ -35,6 +35,29 @@ def btn(key, controller):
     return get_button_text(key, lang=controller.language)
 
 
+async def notify_spectators(context, controller, text, parse_mode=None):
+    """Forward a public game event to all registered spectators via DM.
+
+    Silently skips spectators that cannot be reached (e.g., the user has
+    blocked the bot or has not started a private conversation with it).
+
+    Args:
+        context: The telegram bot context.
+        controller: The game Controller whose spectators should be notified.
+        text: The message text to send.
+        parse_mode: Optional parse mode (e.g., "Markdown").
+    """
+    for uid in list(controller.spectators):
+        try:
+            await context.bot.send_message(
+                chat_id=uid,
+                text=text,
+                parse_mode=parse_mode,
+            )
+        except Exception:
+            pass
+
+
 # --- Timeout helpers ---
 
 def _timeout_job_name(group_id):
@@ -835,12 +858,18 @@ async def begin_playflow(context: ContextTypes.DEFAULT_TYPE, controller):
             text=msg("roles_in_game", controller, roles=role_list),
             parse_mode="Markdown"
         )
+        await notify_spectators(context, controller,
+                                msg("roles_in_game", controller, roles=role_list),
+                                parse_mode="Markdown")
     else:
         await context.bot.send_message(
             chat_id=controller.group_id,
             text=msg("roles_hidden", controller),
             parse_mode="Markdown"
         )
+        await notify_spectators(context, controller,
+                                msg("roles_hidden", controller),
+                                parse_mode="Markdown")
 
     await dm_assign_roles(context, controller)
     await context.bot.send_message(
@@ -984,6 +1013,9 @@ async def send_team_selection(context: ContextTypes.DEFAULT_TYPE, controller):
     if state.failed_vote_count > 0:
         text += "\n" + msg("failed_proposals_warning", controller, count=state.failed_vote_count)
 
+    if controller.spectators:
+        text += "\n" + msg("spectators_watching", controller, count=len(controller.spectators))
+
     keyboard = build_team_keyboard(controller)
     m = await context.bot.send_message(
         chat_id=controller.group_id,
@@ -1044,12 +1076,14 @@ async def timeout_team_select(context: ContextTypes.DEFAULT_TYPE):
     team_names = [controller.players[uid] for uid in controller.selected_team]
     leader_name = controller.players[state.get_current_leader()]
     controller.status = "team_vote"
+    _team_proposed_text = msg("team_proposed", controller,
+                              leader=leader_name, team=", ".join(team_names))
     await context.bot.send_message(
         chat_id=group_id,
-        text=msg("team_proposed", controller,
-                 leader=leader_name, team=", ".join(team_names)),
+        text=_team_proposed_text,
         parse_mode="Markdown"
     )
+    await notify_spectators(context, controller, _team_proposed_text, parse_mode="Markdown")
 
     keyboard = InlineKeyboardMarkup([
         [
@@ -1127,12 +1161,14 @@ async def handle_team_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     # Announce the proposed team
     controller.status = "team_vote"
+    _team_proposed_text = msg("team_proposed", controller,
+                              leader=leader_name, team=", ".join(team_names))
     await context.bot.send_message(
         chat_id=group_id,
-        text=msg("team_proposed", controller,
-                 leader=leader_name, team=", ".join(team_names)),
+        text=_team_proposed_text,
         parse_mode="Markdown"
     )
+    await notify_spectators(context, controller, _team_proposed_text, parse_mode="Markdown")
 
     # DM each player with approve/reject buttons
     keyboard = InlineKeyboardMarkup([
@@ -1251,17 +1287,21 @@ async def resolve_team_vote(context, controller, group_id):
 
     if approved:
         lines.append("\n" + msg("team_approved", controller))
+        _vote_result_text = "\n".join(lines)
         await context.bot.send_message(
-            chat_id=group_id, text="\n".join(lines), parse_mode="Markdown"
+            chat_id=group_id, text=_vote_result_text, parse_mode="Markdown"
         )
+        await notify_spectators(context, controller, _vote_result_text, parse_mode="Markdown")
         controller.status = "mission_vote"
         await send_mission_vote(context, controller, group_id)
     else:
         lines.append("\n" + msg("team_rejected", controller,
                                 failed_count=controller.state.failed_vote_count))
+        _vote_result_text = "\n".join(lines)
         await context.bot.send_message(
-            chat_id=group_id, text="\n".join(lines), parse_mode="Markdown"
+            chat_id=group_id, text=_vote_result_text, parse_mode="Markdown"
         )
+        await notify_spectators(context, controller, _vote_result_text, parse_mode="Markdown")
 
         if controller.state.failed_vote_count >= 5:
             await end_of_game(controller, context, group_id)
@@ -1498,6 +1538,7 @@ async def resolve_mission(context, controller, group_id):
     await context.bot.send_message(
         chat_id=group_id, text=text, parse_mode="Markdown"
     )
+    await notify_spectators(context, controller, text, parse_mode="Markdown")
 
     if state.is_game_over():
         await end_of_game(controller, context, group_id)
@@ -1519,22 +1560,26 @@ async def end_of_game(controller, context, group_id):
     state = controller.state
 
     if state.failed_vote_count >= 5:
+        _five_rejects_text = msg("five_rejects", controller)
         await context.bot.send_message(
             chat_id=group_id,
-            text=msg("five_rejects", controller),
+            text=_five_rejects_text,
             parse_mode="Markdown"
         )
+        await notify_spectators(context, controller, _five_rejects_text, parse_mode="Markdown")
         await game_summary(controller, context, group_id)
         await dm_end_results(controller, context, "evil", "end_reason_five_rejects")
         await reset_lobby(controller, context)
         return
 
     if state.failed_missions >= 3:
+        _evil_wins_text = msg("evil_wins", controller)
         await context.bot.send_message(
             chat_id=group_id,
-            text=msg("evil_wins", controller),
+            text=_evil_wins_text,
             parse_mode="Markdown"
         )
+        await notify_spectators(context, controller, _evil_wins_text, parse_mode="Markdown")
         await game_summary(controller, context, group_id)
         await dm_end_results(controller, context, "evil", "end_reason_missions")
         await reset_lobby(controller, context)
@@ -1543,18 +1588,22 @@ async def end_of_game(controller, context, group_id):
     if state.successful_missions >= 3:
         if state.is_assassin_present():
             controller.status = "assassin_guess"
+            _assassin_phase_text = msg("assassin_phase", controller)
             await context.bot.send_message(
                 chat_id=group_id,
-                text=msg("assassin_phase", controller),
+                text=_assassin_phase_text,
                 parse_mode="Markdown"
             )
+            await notify_spectators(context, controller, _assassin_phase_text, parse_mode="Markdown")
             await send_assassin_guess(context, controller, group_id)
         else:
+            _good_wins_text = msg("good_wins", controller)
             await context.bot.send_message(
                 chat_id=group_id,
-                text=msg("good_wins", controller),
+                text=_good_wins_text,
                 parse_mode="Markdown"
             )
+            await notify_spectators(context, controller, _good_wins_text, parse_mode="Markdown")
             await game_summary(controller, context, group_id)
             await dm_end_results(controller, context, "good", "end_reason_missions")
             await reset_lobby(controller, context)
@@ -1620,6 +1669,9 @@ async def timeout_assassin_guess(context: ContextTypes.DEFAULT_TYPE):
             text=msg("assassin_correct", controller, target=target_name),
             parse_mode="Markdown"
         )
+        await notify_spectators(context, controller,
+                                msg("assassin_correct", controller, target=target_name),
+                                parse_mode="Markdown")
         await game_summary(controller, context, group_id)
         await dm_end_results(controller, context, "evil", "end_reason_assassin_correct")
     else:
@@ -1630,6 +1682,9 @@ async def timeout_assassin_guess(context: ContextTypes.DEFAULT_TYPE):
             text=msg("assassin_wrong", controller, target=target_name, merlin=merlin_name),
             parse_mode="Markdown"
         )
+        await notify_spectators(context, controller,
+                                msg("assassin_wrong", controller, target=target_name, merlin=merlin_name),
+                                parse_mode="Markdown")
         await game_summary(controller, context, group_id)
         await dm_end_results(controller, context, "good", "end_reason_assassin_wrong")
 
@@ -1666,6 +1721,9 @@ async def handle_assassin_guess(update: Update, context: ContextTypes.DEFAULT_TY
             text=msg("assassin_correct", controller, target=target_name),
             parse_mode="Markdown"
         )
+        await notify_spectators(context, controller,
+                                msg("assassin_correct", controller, target=target_name),
+                                parse_mode="Markdown")
         await game_summary(controller, context, group_id)
         await dm_end_results(controller, context, "evil", "end_reason_assassin_correct")
     else:
@@ -1676,6 +1734,9 @@ async def handle_assassin_guess(update: Update, context: ContextTypes.DEFAULT_TY
             text=msg("assassin_wrong", controller, target=target_name, merlin=merlin_name),
             parse_mode="Markdown"
         )
+        await notify_spectators(context, controller,
+                                msg("assassin_wrong", controller, target=target_name, merlin=merlin_name),
+                                parse_mode="Markdown")
         await game_summary(controller, context, group_id)
         await dm_end_results(controller, context, "good", "end_reason_assassin_wrong")
 
@@ -1902,11 +1963,13 @@ async def game_summary(controller, context, group_id):
             result = "✅" if mission["result"] == "success" else "❌"
             lines.append(f"  Mission {mission['mission']}: {result} | Leader: {leader} | Team: {team}")
 
+    _summary_text = "\n".join(lines)
     await context.bot.send_message(
         chat_id=group_id,
-        text="\n".join(lines),
+        text=_summary_text,
         parse_mode="Markdown"
     )
+    await notify_spectators(context, controller, _summary_text, parse_mode="Markdown")
 
 
 async def dm_end_results(controller, context, winner: str, reason: str):
