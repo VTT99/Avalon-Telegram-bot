@@ -11,6 +11,10 @@ description = "Sees Merlin and Morgana (but can't tell which)"
 alignment = "good"
 description = "A loyal servant of Arthur"
 
+[Cleric]
+alignment = "good"
+description = "Learns the alignment of the first leader at game start"
+
 # Evil roles
 [Assassin]
 alignment = "evil"
