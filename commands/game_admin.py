@@ -8,6 +8,16 @@ from utils.message_helper import format_player_list
 from utils.language import get_message
 from commands.game_playflow import begin_playflow, schedule_lobby_timeout, cancel_timeout
 
+# Standard Avalon good/evil balance by player count
+STANDARD_BALANCE = {
+    5: (3, 2),
+    6: (4, 2),
+    7: (4, 3),
+    8: (5, 3),
+    9: (6, 3),
+    10: (6, 4),
+}
+
 
 def get_game(context, group_id):
     return context.bot_data.get(f"game_{group_id}")
@@ -284,6 +294,29 @@ async def handle_custom_role_action(update: Update, context: ContextTypes.DEFAUL
     await query.answer()
 
 
+def _get_balance_warning(controller):
+    """Return a warning string if custom roles deviate from the standard good/evil balance, else None."""
+    if not hasattr(controller, "custom_roles") or not controller.custom_roles:
+        return None
+    from game.roles import is_good, is_evil
+    roles = controller.custom_roles
+    player_count = len(controller.players)
+    good_count = sum(1 for r in roles if is_good(r))
+    evil_count = sum(1 for r in roles if is_evil(r))
+    standard = STANDARD_BALANCE.get(player_count)
+    if standard is None:
+        return None
+    std_good, std_evil = standard
+    if good_count == std_good and evil_count == std_evil:
+        return None
+    return _msg(
+        controller, "balance_warning",
+        good=good_count, evil=evil_count,
+        std_good=std_good, std_evil=std_evil,
+        players=player_count,
+    )
+
+
 async def _check_mode_warnings(context, controller, group_id):
     """Check for mode/player count warnings. Returns True if we need to wait for confirmation."""
     player_count = len(controller.players)
@@ -291,6 +324,13 @@ async def _check_mode_warnings(context, controller, group_id):
 
     if "lady_of_the_lake" in controller.enabled_modes and player_count < 7:
         warnings.append(_msg(controller, "lady_low_player_warning", count=player_count))
+
+    # Balance check only applies to custom role compositions
+    pending = getattr(controller, "_pending_start", None)
+    if pending and pending[0] == "custom":
+        balance_warning = _get_balance_warning(controller)
+        if balance_warning:
+            warnings.append(balance_warning)
 
     if not warnings:
         return False

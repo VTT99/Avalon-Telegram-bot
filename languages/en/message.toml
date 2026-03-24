@@ -107,6 +107,7 @@ roles_hidden = "🙈 **Role composition is hidden for this game.**"
 
 # Mode warnings
 lady_low_player_warning = "⚠️ **Lady of the Lake** is designed for 7+ players (you have {count}). Continue anyway?"
+balance_warning = "⚠️ **Unbalanced roles**: {good} good / {evil} evil (standard for {players} players is {std_good} good / {std_evil} evil). Start anyway?"
 confirm_start_anyway = "▶️ Start anyway"
 cancel_start = "❌ Cancel"
 start_cancelled = "Start cancelled."
