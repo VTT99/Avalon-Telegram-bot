@@ -672,6 +672,12 @@ def _build_config_keyboard(controller):
         f"{extend_status} {get_message('config_allow_extend', lang=lang)}",
         callback_data=f"cfgext|{controller.group_id}"
     )])
+    # Anonymous voting toggle
+    anon_status = "✅" if controller.anonymous_voting else "❌"
+    buttons.append([InlineKeyboardButton(
+        f"{anon_status} {get_message('config_anonymous_voting', lang=lang)}",
+        callback_data=f"cfganon|{controller.group_id}"
+    )])
     buttons.append([InlineKeyboardButton(
         get_message("config_done", lang=lang),
         callback_data=f"cfgdone|{controller.group_id}"
@@ -756,6 +762,31 @@ async def handle_config_extend(update: Update, context: ContextTypes.DEFAULT_TYP
         return
 
     controller.allow_extend = not controller.allow_extend
+    keyboard = _build_config_keyboard(controller)
+    try:
+        await query.edit_message_text(
+            get_message("config_header", lang=controller.language),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
+    except Exception:
+        pass
+    await query.answer()
+
+
+async def handle_config_anon_vote(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Toggle anonymous_voting."""
+    query = update.callback_query
+    parts = query.data.split("|")
+    group_id = int(parts[1])
+
+    from commands.game_admin import get_game
+    controller = get_game(context, group_id)
+    if not controller or not controller.is_game_master(query.from_user.id):
+        await query.answer()
+        return
+
+    controller.anonymous_voting = not controller.anonymous_voting
     keyboard = _build_config_keyboard(controller)
     try:
         await query.edit_message_text(
@@ -1240,14 +1271,17 @@ async def resolve_team_vote(context, controller, group_id):
     })
 
     lines = [msg("team_vote_results", controller)]
-    for uid, vote in controller.team_votes.items():
-        name = controller.players[uid]
-        emoji = "👍" if vote else "👎"
-        lines.append(f"  {emoji} {name}")
-
     approve_count = votes.count(True)
     reject_count = votes.count(False)
-    lines.append(f"\n{btn('approve', controller)}: {approve_count} | {btn('reject', controller)}: {reject_count}")
+    if controller.anonymous_voting:
+        lines.append(f"\n{btn('approve', controller)}: {approve_count} | {btn('reject', controller)}: {reject_count}")
+    else:
+        for uid, vote in controller.team_votes.items():
+            name = controller.players[uid]
+            emoji = "👍" if vote else "👎"
+            lines.append(f"  {emoji} {name}")
+
+        lines.append(f"\n{btn('approve', controller)}: {approve_count} | {btn('reject', controller)}: {reject_count}")
 
     if approved:
         lines.append("\n" + msg("team_approved", controller))

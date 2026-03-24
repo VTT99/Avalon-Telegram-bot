@@ -27,6 +27,7 @@ class Controller:
         }
         self.allow_extend = False
         self.extend_used = False  # reset each phase
+        self.anonymous_voting = False
 
         # Language: prefer group-persisted, fall back to config default
         default_lang = config.get("default_language", "en")
