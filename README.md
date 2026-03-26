@@ -87,6 +87,56 @@ python main.py              # Normal mode (5-10 players)
 python main.py --debug      # Debug mode (2-10 players, for testing)
 ```
 
+## Docker
+
+The easiest way to self-host is with Docker.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+- A Telegram bot token from [@BotFather](https://t.me/BotFather)
+
+### Running with Docker Compose
+
+```bash
+# Clone the repo
+git clone https://github.com/VTT99/Avalon-Telegram-bot.git
+cd Avalon-Telegram-bot
+
+# Set your bot token
+echo "BOT_TOKEN=your_token_here" > .env
+
+# Build and start the bot
+docker compose up -d
+```
+
+The bot runs in the background (`-d`). Game data is stored in `./data/bot_data.pkl` on the host via a volume mount, so it persists across container restarts.
+
+### Useful Commands
+
+```bash
+# View logs
+docker compose logs -f
+
+# Stop the bot
+docker compose down
+
+# Rebuild after a code change
+docker compose up -d --build
+```
+
+### Running with plain Docker
+
+```bash
+docker build -t avalon-bot .
+docker run -d \
+  --name avalon-bot \
+  --restart unless-stopped \
+  -e BOT_TOKEN=your_token_here \
+  -v "$(pwd)/data:/app/data" \
+  avalon-bot
+```
+
 ## Commands
 
 ### Lobby (before game starts)
