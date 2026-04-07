@@ -108,7 +108,10 @@ hide_roles_gm_warning = "⚠️ 警告：你是這場遊戲的玩家。隱藏角
 roles_hidden = "🙈 **本局角色配置已隱藏。**"
 
 # 模式警告
-lady_low_player_warning = "⚠️ **湖中女神**設計為7人以上遊戲（目前有{count}人）。是否仍要繼續？"
+lady_low_player_warning = "⚠️ **湖中女神**設計為{min}人以上遊戲（目前有{count}人）。是否仍要繼續？"
+lancelot_low_player_warning = "⚠️ **蘭斯洛特**需要{min}人以上（目前有{count}人）。是否仍要繼續？"
+excalibur_low_player_warning = "⚠️ **王者之劍**需要{min}人以上（目前有{count}人）。是否仍要繼續？"
+mode_enabled_low_player_warning = "⚠️ **{mode}**需要{min}人以上（目前有{count}人）。你仍可啟用此模式，但需要足夠玩家才能開始遊戲。"
 confirm_start_anyway = "▶️ 繼續開始"
 cancel_start = "❌ 取消"
 start_cancelled = "開始已取消。"
