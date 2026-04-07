@@ -240,3 +240,29 @@ mode_name_excalibur = "王者之劍"
 # 統計
 stats_header = "**排行榜：**"
 no_stats = "本群組尚未進行過任何遊戲。"
+
+# 說明指令
+help_text = """<b>📖 阿瓦隆機器人 — 指令總覽</b>
+
+<b>🏰 大廳指令</b> <i>（遊戲開始前）</i>
+/newgame — 建立新遊戲
+/join — 加入目前的遊戲
+/leave — 離開大廳
+/startgame — 以預設角色配置開始遊戲
+/startcustom — 以自訂角色開始遊戲
+/kick — 踢出玩家（僅限遊戲主持人）
+/abort — 中止目前遊戲（僅限遊戲主持人）
+/speed — 快速設定超時速度
+/timeoutconfig — 設定各階段的超時時間
+/mode — 切換特殊遊戲模式（湖中女神、蘭斯洛特……）
+/language — 設定遊戲語言（僅限遊戲主持人）
+
+<b>⚔️ 遊戲中指令</b> <i>（遊戲進行中）</i>
+/myrole — 查看你的秘密角色（透過私訊）
+/history — 查看任務歷史
+/votehistory — 查看詳細的隊伍投票歷史
+
+<b>ℹ️ 資訊指令</b> <i>（隨時可用）</i>
+/roles — 列出所有角色及其描述
+/stats — 查看本群組的勝負排行榜
+/help — 顯示此說明訊息"""

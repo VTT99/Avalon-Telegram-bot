@@ -15,6 +15,7 @@ from commands.game_admin import (
 )
 from commands.pre_game_actions import join, leave, kick, handle_kick_callback, handle_join_callback
 from commands.language import language, set_language_callback
+from commands.help_command import help_command
 from commands.game_playflow import (
     handle_team_toggle,
     handle_team_confirm,
@@ -62,6 +63,7 @@ BOT_COMMANDS = [
     BotCommand("history", "View mission history"),
     BotCommand("votehistory", "View detailed vote history"),
     BotCommand("stats", "View win/loss leaderboard"),
+    BotCommand("help", "List all available commands"),
 ]
 
 
@@ -95,6 +97,7 @@ def main():
     app.add_handler(CommandHandler("history", history))
     app.add_handler(CommandHandler("votehistory", vote_history))
     app.add_handler(CommandHandler("stats", stats_command))
+    app.add_handler(CommandHandler("help", help_command))
 
     # Lobby callbacks
     app.add_handler(CallbackQueryHandler(set_language_callback, pattern="^lang_"))

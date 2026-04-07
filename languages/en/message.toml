@@ -240,3 +240,29 @@ mode_name_excalibur = "Excalibur"
 # Statistics
 stats_header = "**Leaderboard:**"
 no_stats = "No games played yet in this group."
+
+# Help command
+help_text = """<b>📖 Avalon Bot — Command Reference</b>
+
+<b>🏰 Lobby Commands</b> <i>(before the game starts)</i>
+/newgame — Create a new game
+/join — Join the current game
+/leave — Leave the current lobby
+/startgame — Start with a preset role configuration
+/startcustom — Start with custom roles
+/kick — Kick a player (game master only)
+/abort — Abort the current game (game master only)
+/speed — Set a quick speed preset for timeouts
+/timeoutconfig — Configure per-stage timeouts
+/mode — Toggle special game modes (Lady of the Lake, Lancelot…)
+/language — Set the game language (game master only)
+
+<b>⚔️ In-Game Commands</b> <i>(during an active game)</i>
+/myrole — Check your secret role (via DM)
+/history — View the mission history
+/votehistory — View the detailed team vote history
+
+<b>ℹ️ Info Commands</b> <i>(available anytime)</i>
+/roles — List all roles and their descriptions
+/stats — View the win/loss leaderboard for this group
+/help — Show this help message"""
