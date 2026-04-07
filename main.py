@@ -28,6 +28,7 @@ from commands.game_playflow import (
     handle_config_stage,
     handle_config_set,
     handle_config_extend,
+    handle_config_anon_vote,
     handle_config_done,
     config,
     handle_excalibur,
@@ -110,6 +111,7 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_config_stage, pattern=r"^cfg\|"))
     app.add_handler(CallbackQueryHandler(handle_config_set, pattern=r"^cfgset\|"))
     app.add_handler(CallbackQueryHandler(handle_config_extend, pattern=r"^cfgext\|"))
+    app.add_handler(CallbackQueryHandler(handle_config_anon_vote, pattern=r"^cfganon\|"))
     app.add_handler(CallbackQueryHandler(handle_config_done, pattern=r"^cfgdone\|"))
     app.add_handler(CallbackQueryHandler(handle_extend, pattern=r"^extend\|"))
 
