@@ -32,6 +32,15 @@ description = "Hidden from fellow evil, cannot see them"
 alignment = "evil"
 description = "A minion of Mordred"
 
+# The Lovers (must be added as a pair)
+[Tristan]
+alignment = "good"
+description = "Knows the identity of Iseult. Must be added with Iseult."
+
+[Iseult]
+alignment = "good"
+description = "Knows the identity of Tristan. Must be added with Tristan."
+
 # Lancelot mode roles
 [Guinevere]
 alignment = "good"

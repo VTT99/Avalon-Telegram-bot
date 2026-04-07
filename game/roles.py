@@ -77,6 +77,20 @@ def get_vision(observer_role: str, all_player_roles: dict[int, str], observer_ui
         if result["sees"]:
             result["message_key"] = "guinevere_sees"
 
+    elif observer_role == "Tristan":
+        # Sees Iseult
+        result["sees"] = [uid for uid, role in all_player_roles.items()
+                          if role == "Iseult" and uid != observer_uid]
+        if result["sees"]:
+            result["message_key"] = "lovers_see"
+
+    elif observer_role == "Iseult":
+        # Sees Tristan
+        result["sees"] = [uid for uid, role in all_player_roles.items()
+                          if role == "Tristan" and uid != observer_uid]
+        if result["sees"]:
+            result["message_key"] = "lovers_see"
+
     elif is_evil(observer_role) and observer_role != "Oberon":
         # Sees fellow evil (except Oberon and self)
         result["sees"] = [uid for uid, role in all_player_roles.items()
