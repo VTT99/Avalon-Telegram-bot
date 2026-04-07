@@ -41,6 +41,12 @@ class State:
                 return user_id
         return None
 
+    def get_merlin_pure(self) -> int | None:
+        for user_id, role in self.player_roles.items():
+            if role == "MerlinPure":
+                return user_id
+        return None
+
     def get_assassin(self) -> int | None:
         for user_id, role in self.player_roles.items():
             if role == "Assassin":

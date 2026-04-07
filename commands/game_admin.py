@@ -247,6 +247,13 @@ async def handle_custom_role_action(update: Update, context: ContextTypes.DEFAUL
         if len(controller.custom_roles) >= player_count:
             await query.answer(_msg(controller, "custom_roles_full"))
             return
+        # Merlin and MerlinPure are mutually exclusive
+        if role_name == "MerlinPure" and "Merlin" in controller.custom_roles:
+            await query.answer(_msg(controller, "merlin_pure_mutual_exclusive"), show_alert=True)
+            return
+        if role_name == "Merlin" and "MerlinPure" in controller.custom_roles:
+            await query.answer(_msg(controller, "merlin_pure_mutual_exclusive"), show_alert=True)
+            return
         controller.custom_roles.append(role_name)
     elif action == "rem":
         if role_name in controller.custom_roles:

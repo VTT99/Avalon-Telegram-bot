@@ -63,12 +63,20 @@ def get_vision(observer_role: str, all_player_roles: dict[int, str], observer_ui
         if result["sees"]:
             result["message_key"] = "merlin_sees"
 
-    elif observer_role == "Percival":
-        # Sees Merlin and Morgana (doesn't know which is which)
+    elif observer_role == "MerlinPure":
+        # Sees ALL evil players including Mordred and Oberon
         result["sees"] = [uid for uid, role in all_player_roles.items()
-                          if role in ("Merlin", "Morgana") and uid != observer_uid]
+                          if is_evil(role) and uid != observer_uid]
         if result["sees"]:
-            result["message_key"] = "percival_sees"
+            result["message_key"] = "merlin_pure_sees"
+
+    elif observer_role == "Percival":
+        # Sees Merlin/MerlinPure and Morgana (doesn't know which is which)
+        result["sees"] = [uid for uid, role in all_player_roles.items()
+                          if role in ("Merlin", "MerlinPure", "Morgana") and uid != observer_uid]
+        if result["sees"]:
+            has_merlin_pure = any(all_player_roles.get(uid) == "MerlinPure" for uid in result["sees"])
+            result["message_key"] = "percival_sees_pure" if has_merlin_pure else "percival_sees"
 
     elif observer_role == "Guinevere":
         # Sees both Lancelots (doesn't know which is good/evil)

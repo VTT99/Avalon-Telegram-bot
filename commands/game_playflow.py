@@ -1567,6 +1567,22 @@ async def end_of_game(controller, context, group_id):
 
 # --- Assassin guess ---
 
+def _resolve_assassin_outcome(state, target_uid):
+    """Return (is_correct, correct_key, wrong_key, merlin_id) for an assassination guess.
+
+    Merlin and MerlinPure are mutually exclusive, so at most one will be present.
+    """
+    target_role = state.get_role(target_uid)
+    if target_role in ("Merlin", "MerlinPure"):
+        correct_key = "assassin_correct_merlin_pure" if target_role == "MerlinPure" else "assassin_correct"
+        return True, correct_key, None, None
+    # Wrong guess — find who the real target was
+    merlin_pure_id = state.get_merlin_pure()
+    if merlin_pure_id:
+        return False, None, "assassin_wrong_merlin_pure", merlin_pure_id
+    return False, None, "assassin_wrong", state.get_merlin()
+
+
 async def send_assassin_guess(context, controller, group_id):
     """DM the assassin with buttons to guess Merlin."""
     assassin_id = controller.state.get_assassin()
@@ -1619,20 +1635,23 @@ async def timeout_assassin_guess(context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
-    if controller.state.get_role(target_uid) == "Merlin":
+    is_correct, correct_key, wrong_key, merlin_id = _resolve_assassin_outcome(
+        controller.state, target_uid
+    )
+
+    if is_correct:
         await context.bot.send_message(
             chat_id=group_id,
-            text=msg("assassin_correct", controller, target=target_name),
+            text=msg(correct_key, controller, target=target_name),
             parse_mode="Markdown"
         )
         await game_summary(controller, context, group_id)
         await dm_end_results(controller, context, "evil", "end_reason_assassin_correct")
     else:
-        merlin_id = controller.state.get_merlin()
         merlin_name = controller.players.get(merlin_id, "Unknown")
         await context.bot.send_message(
             chat_id=group_id,
-            text=msg("assassin_wrong", controller, target=target_name, merlin=merlin_name),
+            text=msg(wrong_key, controller, target=target_name, merlin=merlin_name),
             parse_mode="Markdown"
         )
         await game_summary(controller, context, group_id)
@@ -1665,20 +1684,23 @@ async def handle_assassin_guess(update: Update, context: ContextTypes.DEFAULT_TY
         pass
     await query.answer()
 
-    if controller.state.get_role(target_uid) == "Merlin":
+    is_correct, correct_key, wrong_key, merlin_id = _resolve_assassin_outcome(
+        controller.state, target_uid
+    )
+
+    if is_correct:
         await context.bot.send_message(
             chat_id=group_id,
-            text=msg("assassin_correct", controller, target=target_name),
+            text=msg(correct_key, controller, target=target_name),
             parse_mode="Markdown"
         )
         await game_summary(controller, context, group_id)
         await dm_end_results(controller, context, "evil", "end_reason_assassin_correct")
     else:
-        merlin_id = controller.state.get_merlin()
         merlin_name = controller.players.get(merlin_id, "Unknown")
         await context.bot.send_message(
             chat_id=group_id,
-            text=msg("assassin_wrong", controller, target=target_name, merlin=merlin_name),
+            text=msg(wrong_key, controller, target=target_name, merlin=merlin_name),
             parse_mode="Markdown"
         )
         await game_summary(controller, context, group_id)
@@ -1701,6 +1723,7 @@ def _lang_from_context(context):
 # Emoji per role (alignment emoji + role-specific emoji)
 ROLE_EMOJIS = {
     "Merlin":         "😇🧙",
+    "MerlinPure":     "😇✨",
     "Percival":       "😇🛡️",
     "LoyalServant":   "😇👼",
     "Guinevere":      "😇👑",
