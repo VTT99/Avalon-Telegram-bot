@@ -187,6 +187,7 @@ role_name_Minion = "Minion"
 role_name_Guinevere = "Guinevere"
 role_name_Lancelot_Good = "Lancelot (Good)"
 role_name_Lancelot_Evil = "Lancelot (Evil)"
+role_name_Revealer = "Revealer"
 
 # Role descriptions
 roles_list_header = "**All Roles:**"
@@ -207,6 +208,7 @@ guinevere_sees = "Lancelots (you don't know their loyalty): {targets}"
 role_tip_Guinevere = "💡 You can see both Lancelots but don't know which is good and which is evil. Use this to guide your team and figure out who to trust as loyalties may switch!"
 role_desc_Lancelot_Good = "A noble knight whose loyalty may waver"
 role_desc_Lancelot_Evil = "A corrupted knight whose loyalty may waver"
+role_desc_Revealer = "Can reveal their own loyalty card (Good) to one player once per game"
 
 # Role gameplay tips (shown in DM after role assignment)
 role_tip_Merlin = "💡 You can see the evil players (except Mordred). Lead the good team to victory — but be subtle! If the Assassin discovers you're Merlin, they can assassinate you and win the game."
@@ -219,6 +221,18 @@ role_tip_Oberon = "💡 You are evil but hidden from your fellow evil players �
 role_tip_Minion = "💡 You know who the other evil players are. Work together to fail missions and protect your team's identity."
 role_tip_Lancelot_Good = "💡 You start on the good side, but your loyalty may switch during the game. Be prepared for your allegiance to change!"
 role_tip_Lancelot_Evil = "💡 You start on the evil side, but your loyalty may switch during the game. Be prepared for your allegiance to change!"
+role_tip_Revealer = "💡 You are the Revealer! Once per game you can use /reveal in the group chat — the bot will DM you a list of players to choose from, and your chosen player will receive a private message confirming your Good alignment. Use this to build trust!"
+
+# Revealer ability
+revealer_not_revealer = "You are not the Revealer in this game."
+revealer_already_used = "You have already used your reveal ability this game."
+revealer_select_prompt = "🌟 Choose a player to reveal your Good loyalty card to:"
+revealer_dm_notice = "Check your DMs to choose who to reveal to."
+revealer_received = "🌟 **{revealer}** has secretly revealed their loyalty card to you!\n\nThey are on the 😇 **Good** side — you can trust them!"
+revealer_group_announce = "🌟 **The Revealer** has used their ability and revealed their loyalty card to another player."
+revealer_confirm = "✅ You have revealed your Good loyalty card to **{target}**. Ability used."
+revealer_no_game = "No active game found. Use this command in a group with an active game."
+revealer_game_not_started = "The game has not started yet."
 
 # Turn notification
 turn_notification = "👑 **It's your turn!** Select {size} players for Mission {mission}."

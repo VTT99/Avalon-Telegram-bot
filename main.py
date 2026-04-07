@@ -43,6 +43,8 @@ from commands.game_playflow import (
     history,
     vote_history,
     abort_game,
+    reveal_command,
+    handle_reveal_callback,
 )
 
 BOT_COMMANDS = [
@@ -62,6 +64,7 @@ BOT_COMMANDS = [
     BotCommand("history", "View mission history"),
     BotCommand("votehistory", "View detailed vote history"),
     BotCommand("stats", "View win/loss leaderboard"),
+    BotCommand("reveal", "Reveal your Good loyalty card to a player (Revealer role)"),
 ]
 
 
@@ -95,6 +98,7 @@ def main():
     app.add_handler(CommandHandler("history", history))
     app.add_handler(CommandHandler("votehistory", vote_history))
     app.add_handler(CommandHandler("stats", stats_command))
+    app.add_handler(CommandHandler("reveal", reveal_command))
 
     # Lobby callbacks
     app.add_handler(CallbackQueryHandler(set_language_callback, pattern="^lang_"))
@@ -127,6 +131,7 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_mission_vote, pattern=r"^missionvote_-?\d+_(success|fail)$"))
     app.add_handler(CallbackQueryHandler(handle_assassin_guess, pattern=r"^assassin_-?\d+_\d+$"))
     app.add_handler(CallbackQueryHandler(handle_role_info_callback, pattern=r"^roleinfo\|"))
+    app.add_handler(CallbackQueryHandler(handle_reveal_callback, pattern=r"^reveal\|"))
 
     print("Bot is running...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
