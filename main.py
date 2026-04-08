@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -8,7 +9,7 @@ if "--debug" in sys.argv:
 from dotenv import load_dotenv
 from telegram import BotCommand, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
-from telegram.ext import PicklePersistence
+from telegram.ext import ContextTypes, PicklePersistence
 from commands.game_admin import (
     new_game, start_game, start_custom, handle_variant_callback,
     handle_custom_role_action, handle_confirm_start, handle_cancel_start,
@@ -45,6 +46,8 @@ from commands.game_playflow import (
     abort_game,
 )
 
+logger = logging.getLogger(__name__)
+
 BOT_COMMANDS = [
     BotCommand("newgame", "Create a new Avalon game"),
     BotCommand("join", "Join the current game"),
@@ -67,6 +70,15 @@ BOT_COMMANDS = [
 
 async def post_init(application):
     await application.bot.set_my_commands(BOT_COMMANDS)
+
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.error("Unhandled exception while processing update %s", update, exc_info=context.error)
+
+    if isinstance(update, Update) and update.effective_message:
+        await update.effective_message.reply_text(
+            "⚠️ Something went wrong. Please try again or contact the game master."
+        )
 
 
 def main():
@@ -128,10 +140,16 @@ def main():
     app.add_handler(CallbackQueryHandler(handle_assassin_guess, pattern=r"^assassin_-?\d+_\d+$"))
     app.add_handler(CallbackQueryHandler(handle_role_info_callback, pattern=r"^roleinfo\|"))
 
+    app.add_error_handler(error_handler)
+
     print("Bot is running...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.INFO,
+    )
     if os.environ.get("AVALON_DEBUG") == "1":
         print("⚠️  Debug mode enabled (2-4 player configs available)")
     main()
